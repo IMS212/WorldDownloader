@@ -59,7 +59,7 @@ public class VersionConstants {
      * @return A version string, eg <samp>1.11</samp>.
      */
     public static String getExpectedVersion() {
-        return "1.16.4";
+        return "1.16.5";
     }
 
     /**
