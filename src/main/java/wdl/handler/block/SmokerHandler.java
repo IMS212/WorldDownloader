@@ -13,17 +13,17 @@
  */
 package wdl.handler.block;
 
-import net.minecraft.inventory.container.SmokerContainer;
-import net.minecraft.tileentity.SmokerTileEntity;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.inventory.SmokerMenu;
+import net.minecraft.world.level.block.entity.SmokerBlockEntity;
 
-public class SmokerHandler extends BaseFurnaceHandler<SmokerTileEntity, SmokerContainer> {
+public class SmokerHandler extends BaseFurnaceHandler<SmokerBlockEntity, SmokerMenu> {
 	public SmokerHandler() {
-		super(SmokerTileEntity.class, SmokerContainer.class, "container.smoker");
+		super(SmokerBlockEntity.class, SmokerMenu.class, "container.smoker");
 	}
 
 	@Override
-	protected TranslationTextComponent getMessage() {
-		return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.smoker");
+	protected TranslatableComponent getMessage() {
+		return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.smoker");
 	}
 }

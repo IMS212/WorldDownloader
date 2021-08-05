@@ -17,8 +17,7 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.annotation.CheckForSigned;
-
-import net.minecraft.crash.CrashReportCategory;
+import net.minecraft.CrashReportCategory;
 import wdl.EntityUtils;
 
 /**
@@ -45,7 +44,7 @@ public class DefaultConfiguration implements IConfiguration {
 
 	@Override
 	public void addToCrashReport(CrashReportCategory category, String name) {
-		category.addDetail("-", "Default config (" + name + ")");
+		category.setDetail("-", "Default config (" + name + ")");
 	}
 
 	@Override

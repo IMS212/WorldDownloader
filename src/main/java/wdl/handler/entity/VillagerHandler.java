@@ -13,30 +13,30 @@
  */
 package wdl.handler.entity;
 
-import net.minecraft.entity.merchant.IMerchant;
-import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
-import net.minecraft.entity.merchant.villager.VillagerEntity;
-import net.minecraft.inventory.container.MerchantContainer;
-import net.minecraft.item.MerchantOffers;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.inventory.MerchantMenu;
+import net.minecraft.world.item.trading.Merchant;
+import net.minecraft.world.item.trading.MerchantOffers;
 import wdl.ReflectionUtils;
 import wdl.handler.HandlerException;
 
-public class VillagerHandler extends EntityHandler<VillagerEntity, MerchantContainer> {
+public class VillagerHandler extends EntityHandler<Villager, MerchantMenu> {
 	public VillagerHandler() {
-		super(VillagerEntity.class, MerchantContainer.class);
+		super(Villager.class, MerchantMenu.class);
 	}
 
 	@Override
-	public ITextComponent copyData(MerchantContainer container, VillagerEntity villager, boolean riding) throws HandlerException {
-		IMerchant merchant = ReflectionUtils.findAndGetPrivateField(
-				container, IMerchant.class);
+	public Component copyData(MerchantMenu container, Villager villager, boolean riding) throws HandlerException {
+		Merchant merchant = ReflectionUtils.findAndGetPrivateField(
+				container, Merchant.class);
 		MerchantOffers recipes = merchant.getOffers();
-		ReflectionUtils.findAndSetPrivateField(villager, AbstractVillagerEntity.class, MerchantOffers.class, recipes);
-		villager.setXp(merchant.getXp());
+		ReflectionUtils.findAndSetPrivateField(villager, AbstractVillager.class, MerchantOffers.class, recipes);
+		villager.setVillagerXp(merchant.getVillagerXp());
 
-		return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedEntity.villager.tradesOnly");
+		return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedEntity.villager.tradesOnly");
 		// Other data is actually transfered properly now, fortunately
 	}
 }

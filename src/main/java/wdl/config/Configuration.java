@@ -23,8 +23,7 @@ import java.util.Properties;
 
 import javax.annotation.CheckForSigned;
 import javax.annotation.Nonnegative;
-
-import net.minecraft.crash.CrashReportCategory;
+import net.minecraft.CrashReportCategory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -102,10 +101,10 @@ public class Configuration implements IConfiguration {
 					LOGGER.warn("Non-string key " + e.getKey() + " in " + name);
 					continue;
 				}
-				category.addDetail((String)e.getKey(), e.getValue());
+				category.setDetail((String)e.getKey(), e.getValue());
 			}
 		} else {
-			category.addDetail("-", "empty");
+			category.setDetail("-", "empty");
 		}
 	}
 

@@ -14,16 +14,15 @@
 package wdl.gui;
 
 import javax.annotation.OverridingMethodsMustInvokeSuper;
-
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.ChatVisibility;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.ChatVisiblity;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import wdl.WDL;
 import wdl.gui.widget.WDLScreen;
 import wdl.versioned.VersionedFunctions;
@@ -54,11 +53,11 @@ public abstract class GuiTurningCameraBase extends WDLScreen {
 	/**
 	 * The previous chat visibility.
 	 */
-	private ChatVisibility oldChatVisibility;
+	private ChatVisiblity oldChatVisibility;
 	/**
 	 * The player to preview.
 	 */
-	private ClientPlayerEntity cam;
+	private LocalPlayer cam;
 	/**
 	 * The previous render view entity (the entity which Minecraft uses
 	 * for the camera)
@@ -74,7 +73,7 @@ public abstract class GuiTurningCameraBase extends WDLScreen {
 		this.wdl = wdl;
 	}
 
-	protected GuiTurningCameraBase(WDL wdl, ITextComponent title) {
+	protected GuiTurningCameraBase(WDL wdl, Component title) {
 		super(title);
 		this.wdl = wdl;
 	}
@@ -87,15 +86,15 @@ public abstract class GuiTurningCameraBase extends WDLScreen {
 	public void init() {
 		if (!initializedCamera) {
 			this.cam = VersionedFunctions.makePlayer(wdl.minecraft, wdl.worldClient, wdl.player.connection, wdl.player);
-			this.cam.setLocationAndAngles(VersionedFunctions.getEntityX(wdl.player),
+			this.cam.moveTo(VersionedFunctions.getEntityX(wdl.player),
 					VersionedFunctions.getEntityY(wdl.player), VersionedFunctions.getEntityZ(wdl.player),
-					wdl.player.rotationYaw, 0.0F);
-			this.yaw = wdl.player.rotationYaw;
-			this.oldCameraMode = VersionedFunctions.getPointOfView(wdl.minecraft.gameSettings);
-			this.oldHideHud = wdl.minecraft.gameSettings.hideGUI;
-			this.oldShowDebug = wdl.minecraft.gameSettings.showDebugInfo;
-			this.oldChatVisibility = wdl.minecraft.gameSettings.chatVisibility;
-			this.oldRenderViewEntity = wdl.minecraft.getRenderViewEntity();
+					wdl.player.yRot, 0.0F);
+			this.yaw = wdl.player.yRot;
+			this.oldCameraMode = VersionedFunctions.getPointOfView(wdl.minecraft.options);
+			this.oldHideHud = wdl.minecraft.options.hideGui;
+			this.oldShowDebug = wdl.minecraft.options.renderDebug;
+			this.oldChatVisibility = wdl.minecraft.options.chatVisibility;
+			this.oldRenderViewEntity = wdl.minecraft.getCameraEntity();
 
 			initializedCamera = true;
 		}
@@ -115,12 +114,12 @@ public abstract class GuiTurningCameraBase extends WDLScreen {
 	 */
 	@Override
 	public void tick() {
-		if (minecraft.world != null && this.initializedCamera) {
-			this.cam.prevRotationPitch = this.cam.rotationPitch = 0.0F;
-			this.cam.prevRotationYaw = this.yaw;
-			this.cam.lastTickPosY = this.cam.prevPosY = VersionedFunctions.getEntityY(this.cam);
-			this.cam.lastTickPosX = this.cam.prevPosX = VersionedFunctions.getEntityX(this.cam);
-			this.cam.lastTickPosZ = this.cam.prevPosZ = VersionedFunctions.getEntityZ(this.cam);
+		if (minecraft.level != null && this.initializedCamera) {
+			this.cam.xRotO = this.cam.xRot = 0.0F;
+			this.cam.yRotO = this.yaw;
+			this.cam.yOld = this.cam.yo = VersionedFunctions.getEntityY(this.cam);
+			this.cam.xOld = this.cam.xo = VersionedFunctions.getEntityX(this.cam);
+			this.cam.zOld = this.cam.zo = VersionedFunctions.getEntityZ(this.cam);
 
 			// TODO: Rewrite this function as a function of time, rather than
 			// an incremental function, if it's possible to do so.
@@ -139,7 +138,7 @@ public abstract class GuiTurningCameraBase extends WDLScreen {
 					* (float) (1 + ROTATION_VARIANCE
 							* Math.cos((this.yaw + 45) / 45.0 * Math.PI)));
 
-			this.cam.rotationYaw = this.yaw;
+			this.cam.yRot = this.yaw;
 
 			double x = Math.cos(yaw / 180.0D * Math.PI);
 			double z = Math.sin((yaw - 90) / 180.0D * Math.PI);
@@ -150,9 +149,9 @@ public abstract class GuiTurningCameraBase extends WDLScreen {
 			double posZ = VersionedFunctions.getEntityZ(wdl.player) + distance * z;
 			VersionedFunctions.setEntityPos(this.cam, posX, posY, posZ);
 
-			this.cam.chunkCoordX = MathHelper.floor(posX / 16.0D);
-			this.cam.chunkCoordY = MathHelper.floor(posY / 16.0D);
-			this.cam.chunkCoordZ = MathHelper.floor(posZ / 16.0D);
+			this.cam.xChunk = Mth.floor(posX / 16.0D);
+			this.cam.yChunk = Mth.floor(posY / 16.0D);
+			this.cam.zChunk = Mth.floor(posZ / 16.0D);
 		}
 
 		this.deactivateRenderViewEntity();
@@ -169,8 +168,8 @@ public abstract class GuiTurningCameraBase extends WDLScreen {
 	 * @return A new distance, equal to or less than <code>currentDistance</code>.
 	 */
 	private double truncateDistanceIfBlockInWay(double camX, double camZ, double currentDistance) {
-		Vector3d playerPos = wdl.player.getPositionVec().add(0, wdl.player.getEyeHeight(), 0);
-		Vector3d offsetPos = playerPos.add(-currentDistance * camX, 0, currentDistance * camZ);
+		Vec3 playerPos = wdl.player.position().add(0, wdl.player.getEyeHeight(), 0);
+		Vec3 offsetPos = playerPos.add(-currentDistance * camX, 0, currentDistance * camZ);
 
 		// NOTE: Vec3.addVector and Vec3.add return new vectors and leave the
 		// current vector unmodified.
@@ -186,12 +185,12 @@ public abstract class GuiTurningCameraBase extends WDLScreen {
 				offsetZ = 0;
 			}
 
-			Vector3d from = playerPos.add(offsetX, offsetY, offsetZ);
-			Vector3d to = offsetPos.add(offsetX, offsetY, offsetZ);
+			Vec3 from = playerPos.add(offsetX, offsetY, offsetZ);
+			Vec3 to = offsetPos.add(offsetX, offsetY, offsetZ);
 
-			RayTraceResult pos = minecraft.world.rayTraceBlocks(new RayTraceContext(from, to, RayTraceContext.BlockMode.COLLIDER, RayTraceContext.FluidMode.NONE, wdl.player));
+			HitResult pos = minecraft.level.clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, wdl.player));
 
-			double distance = pos.getHitVec().distanceTo(playerPos);
+			double distance = pos.getLocation().distanceTo(playerPos);
 			if (distance < currentDistance && distance > 0) {
 				currentDistance = distance;
 			}
@@ -201,8 +200,8 @@ public abstract class GuiTurningCameraBase extends WDLScreen {
 	}
 
 	@Override
-	public void onClose() {
-		super.onClose();
+	public void removed() {
+		super.removed();
 		this.deactivateRenderViewEntity();
 	}
 
@@ -213,7 +212,7 @@ public abstract class GuiTurningCameraBase extends WDLScreen {
 	 */
 	@Override
 	public void renderBackground() {
-		if (minecraft.world == null) {
+		if (minecraft.level == null) {
 			this.renderDirtBackground(0);
 		}
 	}
@@ -222,7 +221,7 @@ public abstract class GuiTurningCameraBase extends WDLScreen {
 	 * Called when the client world ticks, from a static context.
 	 */
 	public static void onWorldTick() {
-		Screen screen = WDL.getInstance().minecraft.currentScreen;
+		Screen screen = WDL.getInstance().minecraft.screen;
 		if (screen instanceof GuiTurningCameraBase) {
 			((GuiTurningCameraBase) screen).onWorldTick0();
 		}
@@ -245,11 +244,11 @@ public abstract class GuiTurningCameraBase extends WDLScreen {
 	private void activateRenderViewEntity() {
 		if (!this.initializedCamera) return;
 
-		VersionedFunctions.setFirstPersonPointOfView(wdl.minecraft.gameSettings);
-		wdl.minecraft.gameSettings.hideGUI = true;
-		wdl.minecraft.gameSettings.showDebugInfo = false;
-		wdl.minecraft.gameSettings.chatVisibility = ChatVisibility.HIDDEN;
-		wdl.minecraft.setRenderViewEntity(this.cam);
+		VersionedFunctions.setFirstPersonPointOfView(wdl.minecraft.options);
+		wdl.minecraft.options.hideGui = true;
+		wdl.minecraft.options.renderDebug = false;
+		wdl.minecraft.options.chatVisibility = ChatVisiblity.HIDDEN;
+		wdl.minecraft.setCameraEntity(this.cam);
 	}
 
 	/**
@@ -258,10 +257,10 @@ public abstract class GuiTurningCameraBase extends WDLScreen {
 	private void deactivateRenderViewEntity() {
 		if (!this.initializedCamera) return;
 
-		VersionedFunctions.restorePointOfView(wdl.minecraft.gameSettings, this.oldCameraMode);
-		wdl.minecraft.gameSettings.hideGUI = oldHideHud;
-		wdl.minecraft.gameSettings.showDebugInfo = oldShowDebug;
-		wdl.minecraft.gameSettings.chatVisibility = oldChatVisibility;
-		wdl.minecraft.setRenderViewEntity(this.oldRenderViewEntity);
+		VersionedFunctions.restorePointOfView(wdl.minecraft.options, this.oldCameraMode);
+		wdl.minecraft.options.hideGui = oldHideHud;
+		wdl.minecraft.options.renderDebug = oldShowDebug;
+		wdl.minecraft.options.chatVisibility = oldChatVisibility;
+		wdl.minecraft.setCameraEntity(this.oldRenderViewEntity);
 	}
 }

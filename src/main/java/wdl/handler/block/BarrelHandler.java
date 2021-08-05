@@ -16,31 +16,30 @@ package wdl.handler.block;
 import static wdl.versioned.VersionedFunctions.*;
 
 import java.util.function.BiConsumer;
-
-import net.minecraft.inventory.container.ChestContainer;
-import net.minecraft.tileentity.BarrelTileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.BarrelBlockEntity;
 import wdl.handler.HandlerException;
 
-public class BarrelHandler extends BlockHandler<BarrelTileEntity, ChestContainer> {
+public class BarrelHandler extends BlockHandler<BarrelBlockEntity, ChestMenu> {
 
 	public BarrelHandler() {
-		super(BarrelTileEntity.class, ChestContainer.class, "container.barrel");
+		super(BarrelBlockEntity.class, ChestMenu.class, "container.barrel");
 	}
 
 	@Override
-	public ITextComponent handle(BlockPos clickedPos, ChestContainer container, BarrelTileEntity blockEntity,
-			IBlockReader world, BiConsumer<BlockPos, BarrelTileEntity> saveMethod) throws HandlerException {
-		String displayName = getCustomDisplayName(container.getLowerChestInventory());
+	public Component handle(BlockPos clickedPos, ChestMenu container, BarrelBlockEntity blockEntity,
+			BlockGetter world, BiConsumer<BlockPos, BarrelBlockEntity> saveMethod) throws HandlerException {
+		String displayName = getCustomDisplayName(container.getContainer());
 		saveContainerItems(container, blockEntity, 0);
 		if (displayName != null) {
 			blockEntity.setCustomName(customName(displayName));
 		}
 		saveMethod.accept(clickedPos, blockEntity);
-		return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.barrel");
+		return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.barrel");
 	}
 
 }

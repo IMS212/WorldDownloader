@@ -19,18 +19,16 @@ import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
-
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ImmutableSet;
-
-import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityClassification;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
 import wdl.EntityUtils.ISpigotEntityManager;
 import wdl.EntityUtils.SpigotEntityType;
 import wdl.api.IEntityManager;
@@ -75,19 +73,19 @@ class StandardEntityManagers {
 		@Nonnull
 		@Override
 		public SpigotEntityType getSpigotType(String identifier) {
-			Optional<EntityType<?>> otype = EntityType.byKey(identifier);
+			Optional<EntityType<?>> otype = EntityType.byString(identifier);
 			if (!otype.isPresent()) {
 				return SpigotEntityType.UNKNOWN;
 			}
 			EntityType<?> type = otype.get();
-			EntityClassification vanillaClassification = type.getClassification();
+			MobCategory vanillaClassification = type.getCategory();
 			// Spigot's mapping, which is based off of bukkit inheritance (which
 			// doesn't match vanilla)
 			// TODO Not sure I've ported this correctly, nor that spigot is still doing it this way
-			if (vanillaClassification == EntityClassification.MONSTER) {
+			if (vanillaClassification == MobCategory.MONSTER) {
 				return SpigotEntityType.MONSTER;
-			} else if (vanillaClassification == EntityClassification.CREATURE ||
-					vanillaClassification == EntityClassification.AMBIENT) {
+			} else if (vanillaClassification == MobCategory.CREATURE ||
+					vanillaClassification == MobCategory.AMBIENT) {
 				// Is WATER_CREATURE included?  There's a lot more now...
 				return SpigotEntityType.ANIMAL;
 			} else if (type == EntityType.ITEM_FRAME ||
@@ -154,26 +152,26 @@ class StandardEntityManagers {
 		 */
 		@Override
 		public int getTrackDistance(String identifier, Entity entity) {
-			Optional<EntityType<?>> type = EntityType.byKey(identifier);
+			Optional<EntityType<?>> type = EntityType.byString(identifier);
 			if (!type.isPresent()) {
 				return -1;
 			}
-			return type.get().getUpdateFrequency() * 16;
+			return type.get().updateInterval() * 16;
 		}
 
 		@Override
 		public String getGroup(String identifier) {
-			Optional<EntityType<?>> otype = EntityType.byKey(identifier);
+			Optional<EntityType<?>> otype = EntityType.byString(identifier);
 			if (!otype.isPresent()) {
 				return null;
 			}
-			EntityClassification classification = otype.get().getClassification();
+			MobCategory classification = otype.get().getCategory();
 
-			if (classification == EntityClassification.MONSTER) {
+			if (classification == MobCategory.MONSTER) {
 				return "Hostile";
-			} else if (classification == EntityClassification.CREATURE ||
-					classification == EntityClassification.WATER_CREATURE ||
-					classification == EntityClassification.AMBIENT) {
+			} else if (classification == MobCategory.CREATURE ||
+					classification == MobCategory.WATER_CREATURE ||
+					classification == MobCategory.AMBIENT) {
 				return "Passive";
 			} else {
 				return "Other";
@@ -182,9 +180,9 @@ class StandardEntityManagers {
 
 		@Override
 		public String getDisplayIdentifier(String identifier) {
-			String i18nKey = EntityType.byKey(identifier).get().getTranslationKey();
-			if (I18n.hasKey(i18nKey)) {
-				return I18n.format(i18nKey);
+			String i18nKey = EntityType.byString(identifier).get().getDescriptionId();
+			if (I18n.exists(i18nKey)) {
+				return I18n.get(i18nKey);
 			} else {
 				// We want to be clear that there is no result, rather than returning
 				// the key (the default for failed formatting)
@@ -228,8 +226,8 @@ class StandardEntityManagers {
 	static {
 		try {
 			PROVIDED_ENTITIES = Registry.ENTITY_TYPE.stream()
-					.filter(EntityType::isSerializable)
-					.filter(EntityType::isSummonable)
+					.filter(EntityType::canSerialize)
+					.filter(EntityType::canSummon)
 					.map(EntityType::getKey)
 					.map(ResourceLocation::toString)
 					.collect(ImmutableSet.toImmutableSet());

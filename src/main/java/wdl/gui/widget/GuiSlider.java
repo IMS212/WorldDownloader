@@ -14,9 +14,9 @@
 package wdl.gui.widget;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.util.Mth;
 import wdl.versioned.VersionedFunctions;
 
 /**
@@ -39,7 +39,7 @@ public class GuiSlider extends ExtButton {
 	private final int max;
 
 	public GuiSlider(int x, int y, int width, int height, String translationKey, int value, int max) {
-		super(x, y, width, height, new TranslationTextComponent(translationKey, value));
+		super(x, y, width, height, new TranslatableComponent(translationKey, value));
 
 		this.translationKey = translationKey;
 		this.max = max;
@@ -65,9 +65,9 @@ public class GuiSlider extends ExtButton {
 	public void mouseDown(int mouseX, int mouseY) {
 		this.sliderValue = (float)(mouseX - (this.x + 4))
 				/ (float)(this.width - 8);
-		this.sliderValue = MathHelper.clamp(this.sliderValue, 0.0F,
+		this.sliderValue = Mth.clamp(this.sliderValue, 0.0F,
 				1.0F);
-		setMessage(new TranslationTextComponent(translationKey, getValue()));
+		setMessage(new TranslatableComponent(translationKey, getValue()));
 	}
 
 	@Override
@@ -77,15 +77,15 @@ public class GuiSlider extends ExtButton {
 	public void mouseDragged(int mouseX, int mouseY) {
 		this.sliderValue = (float)(mouseX - (this.x + 4))
 				/ (float)(this.width - 8);
-		this.sliderValue = MathHelper.clamp(this.sliderValue, 0.0F,
+		this.sliderValue = Mth.clamp(this.sliderValue, 0.0F,
 				1.0F);
 
-		setMessage(new TranslationTextComponent(translationKey, getValue()));
+		setMessage(new TranslatableComponent(translationKey, getValue()));
 	}
 
 	@Override
-	public ITextComponent getNarratorMessage() {
-		return new TranslationTextComponent("gui.narrate.slider", this.getMessage());
+	public Component getNarratorMessage() {
+		return new TranslatableComponent("gui.narrate.slider", this.getMessage());
 	}
 
 	@Override
@@ -93,7 +93,7 @@ public class GuiSlider extends ExtButton {
 
 	@Override
 	public void midDraw() {
-		Minecraft.getInstance().getTextureManager().bindTexture(WIDGETS_LOCATION);
+		Minecraft.getInstance().getTextureManager().bind(WIDGETS_LOCATION);
 		VersionedFunctions.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
 		if (this.isEnabled()) {
@@ -131,6 +131,6 @@ public class GuiSlider extends ExtButton {
 	public void setValue(int value) {
 		this.sliderValue = value / (float)max;
 
-		setMessage(new TranslationTextComponent(translationKey, getValue()));
+		setMessage(new TranslatableComponent(translationKey, getValue()));
 	}
 }

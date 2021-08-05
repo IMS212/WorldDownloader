@@ -40,7 +40,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.I18n;
+import net.minecraft.client.resources.language.I18n;
 import wdl.versioned.VersionedFunctions;
 
 /**
@@ -87,7 +87,7 @@ public class WorldBackup {
 		 * @return
 		 */
 		public String getDescription() {
-			return I18n.format(descriptionKey);
+			return I18n.get(descriptionKey);
 		}
 
 		/**
@@ -95,7 +95,7 @@ public class WorldBackup {
 		 * @return
 		 */
 		public String getTitle() {
-			return I18n.format(titleKey);
+			return I18n.get(titleKey);
 		}
 	}
 
@@ -129,7 +129,7 @@ public class WorldBackup {
 		@Override
 		public default void onNextFile(String name) {
 			incrementNumerator();
-			onTextUpdate(I18n.format("wdl.saveProgress.backingUp.file", name));
+			onTextUpdate(I18n.get("wdl.saveProgress.backingUp.file", name));
 		}
 
 		/**
@@ -178,7 +178,7 @@ public class WorldBackup {
 	 * Gets the .minecraft/backups folder.
 	 */
 	private static File getBackupsFolder() {
-		File file = new File(Minecraft.getInstance().gameDir, "backups");
+		File file = new File(Minecraft.getInstance().gameDirectory, "backups");
 		file.mkdirs();
 		return file;
 	}

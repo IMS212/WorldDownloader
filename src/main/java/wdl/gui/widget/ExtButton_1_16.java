@@ -13,16 +13,14 @@
  */
 package wdl.gui.widget;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import javax.annotation.Nullable;
-
-import com.mojang.blaze3d.matrix.MatrixStack;
-
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.widget.button.AbstractButton;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextComponent;
 
 /**
  * Extendible button, to deal with changing method signatures between versions.
@@ -40,9 +38,9 @@ abstract class ExtButton extends AbstractButton implements IExtButton {
 	@Deprecated
 	protected static final Void active = null;
 	@Nullable
-	private MatrixStack matrixStack = null;
+	private PoseStack matrixStack = null;
 
-	public ExtButton(int x, int y, int widthIn, int heightIn, ITextComponent buttonText) {
+	public ExtButton(int x, int y, int widthIn, int heightIn, Component buttonText) {
 		super(x, y, widthIn, heightIn, buttonText);
 	}
 
@@ -82,7 +80,7 @@ abstract class ExtButton extends AbstractButton implements IExtButton {
 	}
 
 	@Override
-	public final void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+	public final void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		this.matrixStack = matrixStack;
 		this.beforeDraw();
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
@@ -91,30 +89,30 @@ abstract class ExtButton extends AbstractButton implements IExtButton {
 	}
 
 	@Override
-	protected final void renderBg(MatrixStack matrixStack, Minecraft mc, int mouseX, int mouseY) {
+	protected final void renderBg(PoseStack matrixStack, Minecraft mc, int mouseX, int mouseY) {
 		super.renderBg(matrixStack, mc, mouseX, mouseY);
 		this.midDraw();
 	}
 
 	@Override
-	public void setMessage(ITextComponent message) {
+	public void setMessage(Component message) {
 		super.setMessage(message);
 	}
 
 	@Override
-	protected final IFormattableTextComponent getNarrationMessage() {
-		ITextComponent component = this.getNarratorMessage();
-		if (component instanceof IFormattableTextComponent) {
-			return (IFormattableTextComponent)component;
+	protected final MutableComponent createNarrationMessage() {
+		Component component = this.getNarratorMessage();
+		if (component instanceof MutableComponent) {
+			return (MutableComponent)component;
 		} else {
 			// XXX This is kinda hacky... is there a better solution?
-			return new StringTextComponent("").append(component);
+			return new TextComponent("").append(component);
 		}
 	}
 
 	@Override
-	public ITextComponent getNarratorMessage() {
-		return super.getNarrationMessage();
+	public Component getNarratorMessage() {
+		return super.createNarrationMessage();
 	}
 
 	@Override
@@ -136,14 +134,14 @@ abstract class ExtButton extends AbstractButton implements IExtButton {
 	public void fill(int left, int top, int right, int bottom, int color) {
 		super.fill(matrixStack, left, top, right, bottom, color);
 	}
-	public void drawCenteredString(FontRenderer font, String str, int x, int y, int color) {
-		super.drawCenteredString(matrixStack, font, new StringTextComponent(str), x, y, color);
+	public void drawCenteredString(Font font, String str, int x, int y, int color) {
+		super.drawCenteredString(matrixStack, font, new TextComponent(str), x, y, color);
 	}
-	public void drawRightAlignedString(FontRenderer font, String str, int x, int y, int color) {
+	public void drawRightAlignedString(Font font, String str, int x, int y, int color) {
 		super.drawString(matrixStack, font, str, x, y, color);
 	}
-	public void drawString(FontRenderer font, String str, int x, int y, int color) {
-		super.drawString(matrixStack, font, new StringTextComponent(str), x, y, color);
+	public void drawString(Font font, String str, int x, int y, int color) {
+		super.drawString(matrixStack, font, new TextComponent(str), x, y, color);
 	}
 	public void blit(int x, int y, int textureX, int textureY, int width, int height) {
 		super.blit(matrixStack, x, y, textureX, textureY, width, height);

@@ -14,29 +14,28 @@
 package wdl.handler.block;
 
 import java.util.function.BiConsumer;
-
-import net.minecraft.inventory.container.LecternContainer;
-import net.minecraft.tileentity.LecternTileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.inventory.LecternMenu;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.LecternBlockEntity;
 import wdl.handler.HandlerException;
 
-public class LecternHandler extends BlockHandler<LecternTileEntity, LecternContainer> {
+public class LecternHandler extends BlockHandler<LecternBlockEntity, LecternMenu> {
 
 	public LecternHandler() {
-		super(LecternTileEntity.class, LecternContainer.class, "container.lectern");
+		super(LecternBlockEntity.class, LecternMenu.class, "container.lectern");
 	}
 
 	@Override
-	public ITextComponent handle(BlockPos clickedPos, LecternContainer container, LecternTileEntity blockEntity,
-			IBlockReader world, BiConsumer<BlockPos, LecternTileEntity> saveMethod) throws HandlerException {
+	public Component handle(BlockPos clickedPos, LecternMenu container, LecternBlockEntity blockEntity,
+			BlockGetter world, BiConsumer<BlockPos, LecternBlockEntity> saveMethod) throws HandlerException {
 		blockEntity.setBook(container.getBook());
 		saveInventoryFields(container, blockEntity); // current page
 		// NOTE: Cannot be renamed
 		saveMethod.accept(clickedPos, blockEntity);
-		return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.lectern");
+		return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.lectern");
 	}
 
 }

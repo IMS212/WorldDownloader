@@ -13,8 +13,8 @@
  */
 package wdl.api;
 
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.nbt.CompoundTag;
 
 /**
  * {@link IWDLMod} that edits the world info NBT file (level.dat).
@@ -33,6 +33,6 @@ public interface IWorldInfoEditor extends IWDLMod {
 	 *            The current {@link NBTTagCompound} that is being saved. Edit
 	 *            or add info to this.
 	 */
-	public abstract void editWorldInfo(ClientWorld world, Object info,
-			Object saveHandler, CompoundNBT tag);
+	public abstract void editWorldInfo(ClientLevel world, Object info,
+			Object saveHandler, CompoundTag tag);
 }

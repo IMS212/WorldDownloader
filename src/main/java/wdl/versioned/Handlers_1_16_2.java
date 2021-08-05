@@ -27,43 +27,43 @@ import com.mojang.serialization.Lifecycle;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.minecraft.block.BeaconBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.BrewingStandBlock;
-import net.minecraft.block.ChestBlock;
-import net.minecraft.block.CommandBlockBlock;
-import net.minecraft.block.ContainerBlock;
-import net.minecraft.block.DispenserBlock;
-import net.minecraft.block.DropperBlock;
-import net.minecraft.block.FurnaceBlock;
-import net.minecraft.block.HopperBlock;
-import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.block.TrappedChestBlock;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.client.world.ClientWorld.ClientWorldInfo;
-import net.minecraft.entity.Entity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.CommandBlockTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.datafix.codec.DatapackCodec;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.DynamicRegistries;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.GameType;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldSettings;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.gen.DimensionSettings;
-import net.minecraft.world.gen.settings.DimensionGeneratorSettings;
-import net.minecraft.world.storage.SaveFormat.LevelSave;
-import net.minecraft.world.storage.ServerWorldInfo;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientLevel.ClientLevelData;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.DataPackConfig;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelSettings;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.BeaconBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BrewingStandBlock;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.CommandBlock;
+import net.minecraft.world.level.block.DispenserBlock;
+import net.minecraft.world.level.block.DropperBlock;
+import net.minecraft.world.level.block.FurnaceBlock;
+import net.minecraft.world.level.block.HopperBlock;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.TrappedChestBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.CommandBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
+import net.minecraft.world.level.storage.PrimaryLevelData;
 import wdl.handler.block.BarrelHandler;
 import wdl.handler.block.BeaconHandler;
 import wdl.handler.block.BlastFurnaceHandler;
@@ -90,26 +90,26 @@ final class HandlerFunctions {
 
 	// NOTE: func_239770_b_ creates a new instance each time!  Even this use might be wrong;
 	// probably vanilla's should be in use.  (XXX)
-	static final DynamicRegistries.Impl DYNAMIC_REGISTRIES = DynamicRegistries.func_239770_b_();
+	static final RegistryAccess.RegistryHolder DYNAMIC_REGISTRIES = RegistryAccess.builtin();
 
-	static final DimensionWrapper NETHER = new DimensionWrapper(DimensionType.THE_NETHER, World.THE_NETHER);
-	static final DimensionWrapper OVERWORLD = new DimensionWrapper(DimensionType.OVERWORLD, World.OVERWORLD);
-	static final DimensionWrapper END = new DimensionWrapper(DimensionType.THE_END, World.THE_END);
+	static final DimensionWrapper NETHER = new DimensionWrapper(DimensionType.NETHER_LOCATION, Level.NETHER);
+	static final DimensionWrapper OVERWORLD = new DimensionWrapper(DimensionType.OVERWORLD_LOCATION, Level.OVERWORLD);
+	static final DimensionWrapper END = new DimensionWrapper(DimensionType.END_LOCATION, Level.END);
 
 	// TODO: This doesn't interact with the values above, but I'm not sure how to best handle that
-	private static Map<World, DimensionWrapper> dimensions = new WeakHashMap<>();
+	private static Map<Level, DimensionWrapper> dimensions = new WeakHashMap<>();
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#getDimension
 	 */
-	static DimensionWrapper getDimension(World world) {
+	static DimensionWrapper getDimension(Level world) {
 		return dimensions.computeIfAbsent(world, DimensionWrapper::new);
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#hasSkyLight
 	 */
-	static boolean hasSkyLight(World world) {
+	static boolean hasSkyLight(Level world) {
 		// 1.11+: use hasSkyLight
 		return getDimension(world).getType().hasSkyLight();
 	}
@@ -152,7 +152,7 @@ final class HandlerFunctions {
 	 * @see VersionedFunctions#shouldImportBlockEntity
 	 */
 	static boolean shouldImportBlockEntity(String entityID, BlockPos pos,
-			Block block, CompoundNBT blockEntityNBT, Chunk chunk) {
+			Block block, CompoundTag blockEntityNBT, LevelChunk chunk) {
 		// Note sBlock do not have a block entity in this version.
 		if (block instanceof ChestBlock && entityID.equals("minecraft:chest")) {
 			return true;
@@ -173,17 +173,17 @@ final class HandlerFunctions {
 			return true;
 		} else if (block instanceof ShulkerBoxBlock && entityID.equals("minecraft:shulker_box")) {
 			return true;
-		} else if (block instanceof CommandBlockBlock && entityID.equals("minecraft:command_block")) {
+		} else if (block instanceof CommandBlock && entityID.equals("minecraft:command_block")) {
 			// Only import command sBlock if the current world doesn't have a command set
 			// for the one there, as WDL doesn't explicitly save them so we need to use the
 			// one currently present in the world.
-			TileEntity temp = chunk.getTileEntity(pos, Chunk.CreateEntityType.CHECK);
-			if (temp == null || !(temp instanceof CommandBlockTileEntity)) {
+			BlockEntity temp = chunk.getBlockEntity(pos, LevelChunk.EntityCreationType.CHECK);
+			if (temp == null || !(temp instanceof CommandBlockEntity)) {
 				// Bad/missing data currently there, import the old data
 				return true;
 			}
-			CommandBlockTileEntity te = (CommandBlockTileEntity) temp;
-			boolean currentBlockHasCommand = !te.getCommandBlockLogic().getCommand().isEmpty();
+			CommandBlockEntity te = (CommandBlockEntity) temp;
+			boolean currentBlockHasCommand = !te.getCommandBlock().getCommand().isEmpty();
 			// Only import if the current command block has no command.
 			return !currentBlockHasCommand;
 		} else {
@@ -195,20 +195,20 @@ final class HandlerFunctions {
 	 * @see VersionedFunctions#createNewBlockEntity
 	 */
 	@Nullable
-	static TileEntity createNewBlockEntity(World world, ContainerBlock block, BlockState state) {
-		return block.createNewTileEntity(world);
+	static BlockEntity createNewBlockEntity(Level world, BaseEntityBlock block, BlockState state) {
+		return block.newBlockEntity(world);
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#getSaveHandler
 	 */
 	static ISaveHandlerWrapper getSaveHandler(Minecraft minecraft, String worldName) throws Exception {
-		return new LevelSaveWrapper(minecraft.getSaveLoader().getLevelSave(worldName));
+		return new LevelSaveWrapper(minecraft.getLevelSource().createAccess(worldName));
 	}
 
 	static class LevelSaveWrapper implements ISaveHandlerWrapper {
-		public final LevelSave save;
-		public LevelSaveWrapper(LevelSave save) {
+		public final LevelStorageAccess save;
+		public LevelSaveWrapper(LevelStorageAccess save) {
 			this.save = save;
 		}
 
@@ -220,7 +220,7 @@ final class HandlerFunctions {
 		@Override
 		public File getWorldDirectory() {
 			// XXX: This is rather dubious
-			return this.save.getDimensionFolder(OVERWORLD.getWorldKey());
+			return this.save.getDimensionPath(OVERWORLD.getWorldKey());
 		}
 
 		@Override
@@ -243,25 +243,25 @@ final class HandlerFunctions {
 
 	static class DimensionWrapper implements IDimensionWrapper {
 		private final DimensionType dimensionType;
-		private final RegistryKey<World> worldKey;
+		private final ResourceKey<Level> worldKey;
 
-		public DimensionWrapper(World world) {
-			this.dimensionType = world.getDimensionType();
-			this.worldKey = world.getDimensionKey();
+		public DimensionWrapper(Level world) {
+			this.dimensionType = world.dimensionType();
+			this.worldKey = world.dimension();
 		}
 
-		public DimensionWrapper(RegistryKey<DimensionType> dimensionTypeKey,
-				RegistryKey<World> worldKey) {
-			Registry<DimensionType> dimTypeReg = DYNAMIC_REGISTRIES.func_230520_a_();
-			this.dimensionType = dimTypeReg.getValueForKey(dimensionTypeKey);
+		public DimensionWrapper(ResourceKey<DimensionType> dimensionTypeKey,
+				ResourceKey<Level> worldKey) {
+			Registry<DimensionType> dimTypeReg = DYNAMIC_REGISTRIES.dimensionTypes();
+			this.dimensionType = dimTypeReg.get(dimensionTypeKey);
 			this.worldKey = worldKey;
 		}
 
 		@Override
 		public String getFolderName() {
-			if (this.worldKey == World.THE_END) {
+			if (this.worldKey == Level.END) {
 				return "DIM1";
-			} else if (this.worldKey == World.THE_NETHER) {
+			} else if (this.worldKey == Level.NETHER) {
 				return "DIM-1";
 			}
 			return null;
@@ -273,12 +273,12 @@ final class HandlerFunctions {
 		}
 
 		@Override
-		public RegistryKey<DimensionType> getTypeKey() {
+		public ResourceKey<DimensionType> getTypeKey() {
 			return null;
 		}
 
 		@Override
-		public RegistryKey<World> getWorldKey() {
+		public ResourceKey<Level> getWorldKey() {
 			return this.worldKey;
 		}
 	}
@@ -286,28 +286,28 @@ final class HandlerFunctions {
 	/* (non-javadoc)
 	 * @see VersionedFunctions#writeAdditionalPlayerData
 	 */
-	static void writeAdditionalPlayerData(ClientPlayerEntity player, CompoundNBT nbt) {
-		nbt.putString("Dimension", player.world.getDimensionType().getSuffix());
+	static void writeAdditionalPlayerData(LocalPlayer player, CompoundTag nbt) {
+		nbt.putString("Dimension", player.level.dimensionType().getFileSuffix());
 		// TODO: handle everything in ServerPlayerEntity (but nothing is completely required)
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#getWorldInfoNbt
 	 */
-	static CompoundNBT getWorldInfoNbt(ClientWorld world, CompoundNBT playerNBT) {
-		ClientWorldInfo clientInfo = world.getWorldInfo();
-		WorldSettings worldSettings = new WorldSettings("LevelName", GameType.CREATIVE, false,
-				clientInfo.getDifficulty(), true, new GameRules(), DatapackCodec.VANILLA_CODEC);
-		DynamicRegistries dynamicRegistries = world.func_241828_r();
-		Registry<DimensionType> dimType = dynamicRegistries.func_230520_a_();
-		Registry<Biome> biomes = dynamicRegistries.getRegistry(Registry.BIOME_KEY);
+	static CompoundTag getWorldInfoNbt(ClientLevel world, CompoundTag playerNBT) {
+		ClientLevelData clientInfo = world.getLevelData();
+		LevelSettings worldSettings = new LevelSettings("LevelName", GameType.CREATIVE, false,
+				clientInfo.getDifficulty(), true, new GameRules(), DataPackConfig.DEFAULT);
+		RegistryAccess dynamicRegistries = world.registryAccess();
+		Registry<DimensionType> dimType = dynamicRegistries.dimensionTypes();
+		Registry<Biome> biomes = dynamicRegistries.registryOrThrow(Registry.BIOME_REGISTRY);
 		// TODO: figure out why using the world's registries causes a crash with
 		// Missing registry: ResourceKey[minecraft:root / minecraft:worldgen/noise_settings]
 		// in the following call (probably something with it not being sync'd?)
-		Registry<DimensionSettings> dimSettings = DYNAMIC_REGISTRIES.getRegistry(Registry.NOISE_SETTINGS_KEY);
-		DimensionGeneratorSettings genSettings = DimensionGeneratorSettings.func_242751_a(dimType, biomes, dimSettings);
-		ServerWorldInfo worldInfo = new ServerWorldInfo(worldSettings, genSettings, Lifecycle.stable());
-		return worldInfo.serialize(dynamicRegistries, playerNBT);
+		Registry<NoiseGeneratorSettings> dimSettings = DYNAMIC_REGISTRIES.registryOrThrow(Registry.NOISE_GENERATOR_SETTINGS_REGISTRY);
+		WorldGenSettings genSettings = WorldGenSettings.makeDefault(dimType, biomes, dimSettings);
+		PrimaryLevelData worldInfo = new PrimaryLevelData(worldSettings, genSettings, Lifecycle.stable());
+		return worldInfo.createTag(dynamicRegistries, playerNBT);
 	}
 
 	/* (non-javadoc)
@@ -347,27 +347,27 @@ final class HandlerFunctions {
 	 * @see VersionedFunctions#getEntityX
 	 */
 	static double getEntityX(Entity e) {
-		return e.getPosX();
+		return e.getX();
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#getEntityY
 	 */
 	static double getEntityY(Entity e) {
-		return e.getPosY();
+		return e.getY();
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#getEntityZ
 	 */
 	static double getEntityZ(Entity e) {
-		return e.getPosZ();
+		return e.getZ();
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#setEntityPos
 	 */
 	static void setEntityPos(Entity e, double x, double y, double z) {
-		e.setRawPosition(x, y, z);
+		e.setPosRaw(x, y, z);
 	}
 }

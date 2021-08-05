@@ -17,17 +17,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ImmutableMap;
-
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import wdl.EntityRealigner;
 import wdl.HologramHandler;
 import wdl.MessageTypeCategory;
@@ -50,7 +48,7 @@ public class APIImpl implements WDLApi.APIInstance {
 	private APIImpl() { }  // Internal use only
 
 	@Override
-	public void saveTileEntity(BlockPos pos, TileEntity te) {
+	public void saveTileEntity(BlockPos pos, BlockEntity te) {
 		if (!WDLPluginChannels.canSaveTileEntities(pos.getX() >> 4,
 				pos.getZ() >> 4)) {
 			LOGGER.warn("API attempted to call saveTileEntity when " +
@@ -196,13 +194,13 @@ public class APIImpl implements WDLApi.APIInstance {
 		}
 
 		@Override
-		public ITextComponent getDisplayName() {
-			return new StringTextComponent(mod.getDisplayName());
+		public Component getDisplayName() {
+			return new TextComponent(mod.getDisplayName());
 		}
 
 		@Override
-		public ITextComponent getDescription() {
-			return new TranslationTextComponent("Messages for " + mod.getDisplayName()); // XXX Not translated
+		public Component getDescription() {
+			return new TranslatableComponent("Messages for " + mod.getDisplayName()); // XXX Not translated
 		}
 	}
 

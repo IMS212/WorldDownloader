@@ -14,12 +14,11 @@
 package wdl.gui;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.WDL;
 import wdl.config.IConfiguration;
 import wdl.config.settings.GeneratorSettings;
@@ -43,7 +42,7 @@ public class GuiWDLGenerator extends WDLScreen {
 	private String seedText;
 
 	public GuiWDLGenerator(@Nullable Screen parent, WDL wdl) {
-		super(new TranslationTextComponent("wdl.gui.generator.title", WDL.baseFolderName));
+		super(new TranslatableComponent("wdl.gui.generator.title", WDL.baseFolderName));
 		this.parent = parent;
 		this.wdl = wdl;
 		this.config = wdl.worldProps;
@@ -54,13 +53,13 @@ public class GuiWDLGenerator extends WDLScreen {
 	 */
 	@Override
 	public void init() {
-		this.seedText = I18n.format("wdl.gui.generator.seed");
-		int seedWidth = font.getStringWidth(seedText + " ");
+		this.seedText = I18n.get("wdl.gui.generator.seed");
+		int seedWidth = font.width(seedText + " ");
 
 		int y = this.height / 4 - 15;
 		this.seedField = this.addTextField(new WDLTextField(this.font,
-				this.width / 2 - (100 - seedWidth), y, 200 - seedWidth, 18, new StringTextComponent(seedText)));
-		this.seedField.setText(config.getValue(GeneratorSettings.SEED));
+				this.width / 2 - (100 - seedWidth), y, 200 - seedWidth, 18, new TextComponent(seedText)));
+		this.seedField.setValue(config.getValue(GeneratorSettings.SEED));
 		y += 22;
 		this.generatorBtn = this.addButton(new SettingButton(
 				GeneratorSettings.GENERATOR, this.config, this.width / 2 - 100, y) {
@@ -79,7 +78,7 @@ public class GuiWDLGenerator extends WDLScreen {
 		y += 22;
 		this.settingsPageBtn = this.addButton(new ButtonDisplayGui(
 				this.width / 2 - 100, y, 200, 20,
-				new StringTextComponent(""), this::makeGeneratorSettingsGui));
+				new TextComponent(""), this::makeGeneratorSettingsGui));
 		updateSettingsButtonVisibility();
 
 		this.addButton(new ButtonDisplayGui(this.width / 2 - 100, height - 29,
@@ -97,8 +96,8 @@ public class GuiWDLGenerator extends WDLScreen {
 	}
 
 	@Override
-	public void onClose() {
-		config.setValue(GeneratorSettings.SEED, this.seedField.getText());
+	public void removed() {
+		config.setValue(GeneratorSettings.SEED, this.seedField.getValue());
 
 		wdl.saveProps();
 	}
@@ -115,10 +114,10 @@ public class GuiWDLGenerator extends WDLScreen {
 
 		super.render(mouseX, mouseY, partialTicks);
 
-		ITextComponent tooltip = null;
+		Component tooltip = null;
 
 		if (seedField.isHovered()) {
-			tooltip = new TranslationTextComponent("wdl.gui.generator.seed.description");
+			tooltip = new TranslatableComponent("wdl.gui.generator.seed.description");
 		} else if (generatorBtn.isHovered()) {
 			tooltip = generatorBtn.getTooltip();
 		} else if (generateStructuresBtn.isHovered()) {
@@ -135,21 +134,21 @@ public class GuiWDLGenerator extends WDLScreen {
 		switch (this.config.getValue(GeneratorSettings.GENERATOR)) {
 		case FLAT:
 			settingsPageBtn.visible = true;
-			settingsPageBtn.setMessage(new TranslationTextComponent("wdl.gui.generator.flatSettings"));
+			settingsPageBtn.setMessage(new TranslatableComponent("wdl.gui.generator.flatSettings"));
 			break;
 		case CUSTOMIZED:
 			settingsPageBtn.visible = true;
-			settingsPageBtn.setMessage(new TranslationTextComponent("wdl.gui.generator.customSettings"));
+			settingsPageBtn.setMessage(new TranslatableComponent("wdl.gui.generator.customSettings"));
 			break;
 		case BUFFET:
 			settingsPageBtn.visible = true;
-			settingsPageBtn.setMessage(new TranslationTextComponent("wdl.gui.generator.buffetSettings"));
+			settingsPageBtn.setMessage(new TranslatableComponent("wdl.gui.generator.buffetSettings"));
 			break;
 		case SINGLE_BIOME_SURFACE:
 		case SINGLE_BIOME_CAVES:
 		case SINGLE_BIOME_FLOATING_ISLANDS:
 			settingsPageBtn.visible = true;
-			settingsPageBtn.setMessage(new TranslationTextComponent("wdl.gui.generator.selectBiome"));
+			settingsPageBtn.setMessage(new TranslatableComponent("wdl.gui.generator.selectBiome"));
 			break;
 		default:
 			settingsPageBtn.visible = false;

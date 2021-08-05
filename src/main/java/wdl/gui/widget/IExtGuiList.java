@@ -14,9 +14,8 @@
 package wdl.gui.widget;
 
 import java.util.List;
-
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.EditBox;
 
 /**
  * Methods that should be provided or implemented in the implementation-specific ExtGuiList.
@@ -31,7 +30,7 @@ interface IExtGuiList<T extends IExtGuiList.IExtGuiListEntry<T>> {
 		 *               negative).
 		 * @param y      y coordinate relative to the top of the entry.
 		 */
-		public abstract <B extends Widget> B addButton(B button, int x, int y);
+		public abstract <B extends AbstractWidget> B addButton(B button, int x, int y);
 
 		/**
 		 * Adds a text field.  Intended for internal use.
@@ -41,7 +40,7 @@ interface IExtGuiList<T extends IExtGuiList.IExtGuiListEntry<T>> {
 		 *               negative).
 		 * @param y      y coordinate relative to the top of the entry.
 		 */
-		public abstract <B extends TextFieldWidget> B addTextField(B field, int x, int y);
+		public abstract <B extends EditBox> B addTextField(B field, int x, int y);
 
 		/**
 		 * Draw this entry, and also perform various update logic.

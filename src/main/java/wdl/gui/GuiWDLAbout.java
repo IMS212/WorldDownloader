@@ -14,10 +14,9 @@
 package wdl.gui;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.VersionConstants;
 import wdl.WDL;
 import wdl.gui.widget.ButtonDisplayGui;
@@ -58,14 +57,14 @@ public class GuiWDLAbout extends WDLScreen {
 	@Override
 	public void init() {
 		this.addButton(new ButtonDisplayGui((this.width / 2) - 155, 18, 150, 20,
-				new TranslationTextComponent("wdl.gui.about.extensions"), () -> new GuiWDLExtensions(this)));
+				new TranslatableComponent("wdl.gui.about.extensions"), () -> new GuiWDLExtensions(this)));
 		this.addButton(new WDLButton((this.width / 2) + 5, 18, 150, 20,
-				new TranslationTextComponent("wdl.gui.about.debugInfo")) {
+				new TranslatableComponent("wdl.gui.about.debugInfo")) {
 			public @Override void performAction() {
 				// Copy debug info
 				VersionedFunctions.setClipboardString(wdl.getDebugInfo());
 				// Change text to "copied" once clicked
-				this.setMessage(new TranslationTextComponent("wdl.gui.about.debugInfo.copied"));
+				this.setMessage(new TranslatableComponent("wdl.gui.about.debugInfo.copied"));
 			}
 		});
 		this.addButton(new ButtonDisplayGui((this.width / 2) - 100, this.height - 29,
@@ -76,33 +75,33 @@ public class GuiWDLAbout extends WDLScreen {
 		String mcVersion = VersionConstants.getMinecraftVersionInfo();
 
 		list = this.addList(new TextList(this, this.font, width, height, 39, 32));
-		list.addLine(I18n.format("wdl.gui.about.blurb"));
+		list.addLine(I18n.get("wdl.gui.about.blurb"));
 		list.addBlankLine();
-		list.addLine(I18n.format("wdl.gui.about.version", wdlVersion,
+		list.addLine(I18n.get("wdl.gui.about.version", wdlVersion,
 				mcVersion));
 		list.addBlankLine();
 
 		String currentLanguage = wdl.minecraft.getLanguageManager()
-				.getCurrentLanguage().toString();
-		String translatorCredit = I18n.format("wdl.translatorCredit",
+				.getSelected().toString();
+		String translatorCredit = I18n.get("wdl.translatorCredit",
 				currentLanguage);
 		if (translatorCredit != null && !translatorCredit.isEmpty()) {
 			list.addLine(translatorCredit);
 			list.addBlankLine();
 		}
 
-		list.addLinkLine(I18n.format("wdl.gui.about.forumThread"), FORUM_THREAD);
+		list.addLinkLine(I18n.get("wdl.gui.about.forumThread"), FORUM_THREAD);
 		list.addBlankLine();
-		list.addLinkLine(I18n.format("wdl.gui.about.allSrc"), ALL_GITHUB);
+		list.addLinkLine(I18n.get("wdl.gui.about.allSrc"), ALL_GITHUB);
 		list.addBlankLine();
-		list.addLinkLine(I18n.format("wdl.gui.about.license"), MMPLV2);
+		list.addLinkLine(I18n.get("wdl.gui.about.license"), MMPLV2);
 
 		if (VersionConstants.shadesFastUtil()) {
 			list.addBlankLine();
-			list.addLine(I18n.format("wdl.gui.about.fastutil.blurb"));
+			list.addLine(I18n.get("wdl.gui.about.fastutil.blurb"));
 			list.addBlankLine();
-			list.addLinkLine(I18n.format("wdl.gui.about.fastutil.website"), FASTUTIL_PAGE);
-			list.addLinkLine(I18n.format("wdl.gui.about.fastutil.license"), APACHE_LICENSE_2_0);
+			list.addLinkLine(I18n.get("wdl.gui.about.fastutil.website"), FASTUTIL_PAGE);
+			list.addLinkLine(I18n.get("wdl.gui.about.fastutil.license"), APACHE_LICENSE_2_0);
 		}
 	}
 

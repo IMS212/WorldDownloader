@@ -13,15 +13,15 @@
  */
 package wdl.gui.widget;
 
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Component;
 
 /**
  * A text field that works across versions.
  */
 public class WDLTextField extends ExtTextField {
-	public WDLTextField(FontRenderer fontRenderer,
-			int x, int y, int width, int height, ITextComponent label) {
+	public WDLTextField(Font fontRenderer,
+			int x, int y, int width, int height, Component label) {
 		super(fontRenderer, x, y, width, height, label);
 	}
 }

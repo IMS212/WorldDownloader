@@ -18,9 +18,9 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 /**
  * A button that displays another GUI when it is clicked.
@@ -36,33 +36,33 @@ public class ButtonDisplayGui extends WDLButton {
 	 * Creates a new button that displays the given screen, with "done" as its text.
 	 */
 	public ButtonDisplayGui(int x, int y, int widthIn, int heightIn, @Nullable Screen screen) {
-		this(x, y, widthIn, heightIn, new TranslationTextComponent("gui.done"), screen);
+		this(x, y, widthIn, heightIn, new TranslatableComponent("gui.done"), screen);
 	}
 
 	/**
 	 * Creates a new button that displays the given screen, with "done" as its text.
 	 */
 	public ButtonDisplayGui(int x, int y, int widthIn, int heightIn, Supplier<? extends Screen> supplier) {
-		this(x, y, widthIn, heightIn, new TranslationTextComponent("gui.done"), supplier);
+		this(x, y, widthIn, heightIn, new TranslatableComponent("gui.done"), supplier);
 	}
 
 	/**
 	 * Creates a new button that displays the given screen, with the specified text.
 	 */
-	public ButtonDisplayGui(int x, int y, int widthIn, int heightIn, ITextComponent buttonText, @Nullable Screen screen) {
+	public ButtonDisplayGui(int x, int y, int widthIn, int heightIn, Component buttonText, @Nullable Screen screen) {
 		this(x, y, widthIn, heightIn, buttonText, () -> screen);
 	}
 
 	/**
 	 * Creates a new button that displays the given screen, with the specified text.
 	 */
-	public ButtonDisplayGui(int x, int y, int widthIn, int heightIn, ITextComponent buttonText, Supplier<? extends Screen> supplier) {
+	public ButtonDisplayGui(int x, int y, int widthIn, int heightIn, Component buttonText, Supplier<? extends Screen> supplier) {
 		super(x, y, widthIn, heightIn, buttonText);
 		this.screenSupplier = supplier;
 	}
 
 	@Override
 	public void performAction() {
-		Minecraft.getInstance().displayGuiScreen(this.screenSupplier.get());
+		Minecraft.getInstance().setScreen(this.screenSupplier.get());
 	}
 }

@@ -13,16 +13,16 @@
  */
 package wdl.handler.entity;
 
-import net.minecraft.entity.passive.horse.AbstractHorseEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.container.HorseInventoryContainer;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.inventory.HorseInventoryMenu;
+import net.minecraft.world.inventory.Slot;
 import wdl.ReflectionUtils;
 import wdl.handler.HandlerException;
 
-public class HorseHandler extends EntityHandler<AbstractHorseEntity, HorseInventoryContainer> {
+public class HorseHandler extends EntityHandler<AbstractHorse, HorseInventoryMenu> {
 	/**
 	 * The number of slots used for the player inventory, so that the size
 	 * of the horse's inventory can be computed.
@@ -30,35 +30,35 @@ public class HorseHandler extends EntityHandler<AbstractHorseEntity, HorseInvent
 	private static final int PLAYER_INVENTORY_SLOTS = 4 * 9;
 
 	public HorseHandler() {
-		super(AbstractHorseEntity.class, HorseInventoryContainer.class);
+		super(AbstractHorse.class, HorseInventoryMenu.class);
 	}
 
 	@Override
-	public boolean checkRiding(HorseInventoryContainer container, AbstractHorseEntity riddenHorse) {
-		AbstractHorseEntity horseInContainer = ReflectionUtils
-				.findAndGetPrivateField(container, AbstractHorseEntity.class);
+	public boolean checkRiding(HorseInventoryMenu container, AbstractHorse riddenHorse) {
+		AbstractHorse horseInContainer = ReflectionUtils
+				.findAndGetPrivateField(container, AbstractHorse.class);
 
 		// Intentional reference equals
 		return horseInContainer == riddenHorse;
 	}
 
 	@Override
-	public ITextComponent copyData(HorseInventoryContainer container, AbstractHorseEntity horse, boolean riding) throws HandlerException {
-		Inventory horseInventory = new Inventory(container.inventorySlots.size() - PLAYER_INVENTORY_SLOTS);
+	public Component copyData(HorseInventoryMenu container, AbstractHorse horse, boolean riding) throws HandlerException {
+		SimpleContainer horseInventory = new SimpleContainer(container.slots.size() - PLAYER_INVENTORY_SLOTS);
 
-		for (int i = 0; i < horseInventory.getSizeInventory(); i++) {
+		for (int i = 0; i < horseInventory.getContainerSize(); i++) {
 			Slot slot = container.getSlot(i);
-			if (slot.getHasStack()) {
-				horseInventory.setInventorySlotContents(i, slot.getStack());
+			if (slot.hasItem()) {
+				horseInventory.setItem(i, slot.getItem());
 			}
 		}
 
-		ReflectionUtils.findAndSetPrivateField(horse, AbstractHorseEntity.class, Inventory.class, horseInventory);
+		ReflectionUtils.findAndSetPrivateField(horse, AbstractHorse.class, SimpleContainer.class, horseInventory);
 
 		if (riding) {
-			return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedRiddenEntity.horse");
+			return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedRiddenEntity.horse");
 		} else {
-			return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedEntity.horse");
+			return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedEntity.horse");
 		}
 	}
 

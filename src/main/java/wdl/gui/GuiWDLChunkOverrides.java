@@ -14,17 +14,15 @@
 package wdl.gui;
 
 import javax.annotation.Nullable;
-
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
 import com.google.common.collect.Multimap;
 //import com.mojang.blaze3d.platform.GlStateManager;
-
-import net.minecraft.client.audio.SimpleSound;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import wdl.WDL;
 import wdl.WDLPluginChannels;
 import wdl.WDLPluginChannels.ChunkRange;
@@ -103,13 +101,13 @@ public class GuiWDLChunkOverrides extends WDLScreen {
 	private int lastTickX, lastTickY;
 
 	public GuiWDLChunkOverrides(@Nullable Screen parent, WDL wdl) {
-		super(new StringTextComponent("Chunk overrides"));
+		super(new TextComponent("Chunk overrides"));
 		this.parent = parent;
 		this.wdl = wdl;
 
 		if (wdl.player != null) {
-			this.scrollX = wdl.player.chunkCoordX;
-			this.scrollZ = wdl.player.chunkCoordZ;
+			this.scrollX = wdl.player.xChunk;
+			this.scrollZ = wdl.player.zChunk;
 		}
 	}
 
@@ -136,14 +134,14 @@ public class GuiWDLChunkOverrides extends WDLScreen {
 		});
 
 		this.addButton(new WDLButton(width / 2 - 80, 18, 80, 20,
-				new StringTextComponent("Send request")) {
+				new TextComponent("Send request")) {
 			public @Override void performAction() {
 				WDLPluginChannels.sendRequests();
 			}
 		});
 
 		this.startDownloadButton = this.addButton(new WDLButton(width / 2 + 5, 18, 150, 20,
-				new StringTextComponent("Start download in these ranges")) {
+				new TextComponent("Start download in these ranges")) {
 			public @Override void performAction() {
 				if (!WDLPluginChannels.canDownloadAtAll()) {
 					setEnabled(false);
@@ -158,13 +156,13 @@ public class GuiWDLChunkOverrides extends WDLScreen {
 				200, 20, this.parent));
 
 		this.addButton(new ButtonDisplayGui(this.width / 2 - 155, 39, 100, 20,
-				new TranslationTextComponent("wdl.gui.permissions.current"),
+				new TranslatableComponent("wdl.gui.permissions.current"),
 				() -> new GuiWDLPermissions(this.parent, this.wdl)));
 		this.addButton(new ButtonDisplayGui(this.width / 2 - 50, 39, 100, 20,
-				new TranslationTextComponent("wdl.gui.permissions.request"),
+				new TranslatableComponent("wdl.gui.permissions.request"),
 				() -> new GuiWDLPermissionRequest(this.parent, this.wdl)));
 		this.addButton(new WDLButton(this.width / 2 + 55, 39, 100, 20,
-				new TranslationTextComponent("wdl.gui.permissions.overrides")) {
+				new TranslatableComponent("wdl.gui.permissions.overrides")) {
 			public @Override void performAction() {
 				// Would open this GUI; do nothing.
 			};
@@ -196,18 +194,18 @@ public class GuiWDLChunkOverrides extends WDLScreen {
 					partiallyRequested = true;
 				}
 
-				minecraft.getSoundHandler().play(SimpleSound.master(
+				minecraft.getSoundManager().play(SimpleSoundInstance.forUI(
 								SoundEvents.UI_BUTTON_CLICK, 1.0F));
 				break;
 			case ERASING:
 				// TODO
-				minecraft.getSoundHandler().play(SimpleSound.master(
-						SoundEvents.BLOCK_DISPENSER_FAIL, 1.0F));
+				minecraft.getSoundManager().play(SimpleSoundInstance.forUI(
+						SoundEvents.DISPENSER_FAIL, 1.0F));
 				break;
 			case MOVING:
 				// TODO
-				minecraft.getSoundHandler().play(SimpleSound.master(
-						SoundEvents.BLOCK_DISPENSER_FAIL, 1.0F));
+				minecraft.getSoundManager().play(SimpleSoundInstance.forUI(
+						SoundEvents.DISPENSER_FAIL, 1.0F));
 				break;
 			}
 		}
@@ -338,7 +336,7 @@ public class GuiWDLChunkOverrides extends WDLScreen {
 	 * @return The chunk position.
 	 */
 	private int displayXToChunkX(int displayX) {
-		return MathHelper.floor((displayX - (float)(width / 2)) / SCALE + scrollX);
+		return Mth.floor((displayX - (float)(width / 2)) / SCALE + scrollX);
 	}
 
 	/**
@@ -349,7 +347,7 @@ public class GuiWDLChunkOverrides extends WDLScreen {
 	 * @return The chunk position.
 	 */
 	private int displayZToChunkZ(int displayZ) {
-		return MathHelper.floor((displayZ - (float)(height / 2)) / SCALE + scrollZ);
+		return Mth.floor((displayZ - (float)(height / 2)) / SCALE + scrollZ);
 	}
 
 	/**
@@ -384,7 +382,7 @@ public class GuiWDLChunkOverrides extends WDLScreen {
 		 * @param mode
 		 */
 		public RequestModeButton(int x, int y, Mode mode) {
-			super(x, y, 20, 20, new StringTextComponent(""));
+			super(x, y, 20, 20, new TextComponent(""));
 			this.mode = mode;
 		}
 
@@ -402,7 +400,7 @@ public class GuiWDLChunkOverrides extends WDLScreen {
 		public void afterDraw() {
 			// Reset the color, which gets set somewhere (probably when drawing text)
 			//GlStateManager.color3f(1.0f, 1.0f, 1.0f); XXX broken until 1.15 names work
-			minecraft.getTextureManager().bindTexture(WIDGET_TEXTURES);
+			minecraft.getTextureManager().bind(WIDGET_TEXTURES);
 
 			this.blit(this.x + 2, this.y + 2,
 					mode.overlayU, mode.overlayV, 16, 16);

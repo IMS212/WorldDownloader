@@ -17,13 +17,12 @@ import java.lang.reflect.Field;
 import java.nio.IntBuffer;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.storage.RegionFile;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.storage.RegionFile;
 import wdl.WDL;
 import wdl.config.settings.MiscSettings;
 import wdl.gui.widget.ButtonDisplayGui;
@@ -76,8 +75,8 @@ public class GuiSavedChunks extends WDLScreen {
 		this.wdl = wdl;
 
 		if (wdl.player != null) {
-			this.scrollX = wdl.player.chunkCoordX;
-			this.scrollZ = wdl.player.chunkCoordZ;
+			this.scrollX = wdl.player.xChunk;
+			this.scrollZ = wdl.player.zChunk;
 		}
 
 		int saveTime = (int)(wdl.worldProps.getValue(MiscSettings.LAST_SAVED) / 1000);
@@ -115,10 +114,10 @@ public class GuiSavedChunks extends WDLScreen {
 		VersionedFunctions.drawDarkBackground(0, 0, height, width);
 
 		// Old chunks
-		int minX = MathHelper.floor(displayXToChunkX(0) / 32.0);
-		int maxX = MathHelper.floor(displayXToChunkX(width) / 32.0);
-		int minZ = MathHelper.floor(displayZToChunkZ(0) / 32.0);
-		int maxZ = MathHelper.floor(displayZToChunkZ(height) / 32.0);
+		int minX = Mth.floor(displayXToChunkX(0) / 32.0);
+		int maxX = Mth.floor(displayXToChunkX(width) / 32.0);
+		int minZ = Mth.floor(displayZToChunkZ(0) / 32.0);
+		int maxZ = Mth.floor(displayZToChunkZ(height) / 32.0);
 		for (int rx = minX; rx <= maxX; rx++) {
 			for (int rz = minZ; rz <= maxZ; rz++) {
 				@SuppressWarnings("resource")
@@ -134,7 +133,7 @@ public class GuiSavedChunks extends WDLScreen {
 		}
 
 		// Chunks near the player
-		for (Chunk chunk : wdl.getChunkList()) {
+		for (LevelChunk chunk : wdl.getChunkList()) {
 			drawChunk(chunk.getPos(), 0x3F0000FF);
 		}
 
@@ -154,7 +153,7 @@ public class GuiSavedChunks extends WDLScreen {
 			int z = displayZToChunkZ(mouseY);
 			if (wdl.savedChunks.contains(new ChunkPos(x, z))) {
 				this.drawString(this.font,
-						I18n.format("wdl.gui.savedChunks.savedNow", x, z),
+						I18n.get("wdl.gui.savedChunks.savedNow", x, z),
 						12, 24, 0xFFFFFF);
 			} else {
 				@SuppressWarnings("resource")
@@ -166,15 +165,15 @@ public class GuiSavedChunks extends WDLScreen {
 				}
 				if (timestamp > savedAfterLastDownloadTime) {
 					this.drawString(this.font,
-							I18n.format("wdl.gui.savedChunks.savedAfterDownload", x, z, timestamp * 1000L),
+							I18n.get("wdl.gui.savedChunks.savedAfterDownload", x, z, timestamp * 1000L),
 							12, 24, 0xFFFFFF);
 				} else if (timestamp != 0) {
 					this.drawString(this.font,
-							I18n.format("wdl.gui.savedChunks.lastSaved", x, z, timestamp * 1000L),
+							I18n.get("wdl.gui.savedChunks.lastSaved", x, z, timestamp * 1000L),
 							12, 24, 0xFFFFFF);
 				} else {
 					this.drawString(this.font,
-							I18n.format("wdl.gui.savedChunks.neverSaved", x, z),
+							I18n.get("wdl.gui.savedChunks.neverSaved", x, z),
 							12, 24, 0xFFFFFF);
 				}
 			}
@@ -182,7 +181,7 @@ public class GuiSavedChunks extends WDLScreen {
 
 		if (wdl.chunkLoader == null) {
 			// XXX Untranslated, temporary strings
-			this.drawCenteredString(font, "Start download to see information about saved chunks, from now and earlier.", width / 2, height / 2 - font.FONT_HEIGHT, 0xFFFFFF);
+			this.drawCenteredString(font, "Start download to see information about saved chunks, from now and earlier.", width / 2, height / 2 - font.lineHeight, 0xFFFFFF);
 			this.drawCenteredString(font, "In the future, this GUI will work even when downloading hasn't been started.", width / 2, height / 2, 0xFFFFFF);
 		}
 
@@ -290,11 +289,11 @@ public class GuiSavedChunks extends WDLScreen {
 					// Make the color go from red -> yellow in ~1 day and then
 					// yellow -> red in ~1 month
 					if (age <= YELLOW_THRESHOLD) {
-						r = MathHelper.clamp(0xFF * age / YELLOW_THRESHOLD, 0, 0xFF);
+						r = Mth.clamp(0xFF * age / YELLOW_THRESHOLD, 0, 0xFF);
 						g = 0xFF;
 					} else {
 						r = 0xFF;
-						g = 0xFF - MathHelper.clamp((age - YELLOW_THRESHOLD) / RED_THRESHOLD, 0, 0xFF);
+						g = 0xFF - Mth.clamp((age - YELLOW_THRESHOLD) / RED_THRESHOLD, 0, 0xFF);
 					}
 					color = 0xFF000000 | r << 16 | g << 8;
 				}
@@ -349,7 +348,7 @@ public class GuiSavedChunks extends WDLScreen {
 	 * @return The chunk position.
 	 */
 	private int displayXToChunkX(int displayX) {
-		return MathHelper.floor((displayX - (float)(width / 2)) / SCALE + scrollX);
+		return Mth.floor((displayX - (float)(width / 2)) / SCALE + scrollX);
 	}
 
 	/**
@@ -360,7 +359,7 @@ public class GuiSavedChunks extends WDLScreen {
 	 * @return The chunk position.
 	 */
 	private int displayZToChunkZ(int displayZ) {
-		return MathHelper.floor((displayZ - (float)(height / 2)) / SCALE + scrollZ);
+		return Mth.floor((displayZ - (float)(height / 2)) / SCALE + scrollZ);
 	}
 
 	/**

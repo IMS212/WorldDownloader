@@ -13,7 +13,7 @@
  */
 package wdl.config;
 
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.chat.Component;
 
 /**
  * A cyclable setting is a setting that can be cycled via a button through a
@@ -33,7 +33,7 @@ public interface CyclableSetting<T> extends Setting<T> {
 	 *
 	 * @return A text component.
 	 */
-	public abstract ITextComponent getDescription();
+	public abstract Component getDescription();
 
 	/**
 	 * Gets a text component that describes this setting's current value.
@@ -41,5 +41,5 @@ public interface CyclableSetting<T> extends Setting<T> {
 	 * @param curValue The current value.
 	 * @return A translation string.
 	 */
-	public ITextComponent getButtonText(T curValue);
+	public Component getButtonText(T curValue);
 }

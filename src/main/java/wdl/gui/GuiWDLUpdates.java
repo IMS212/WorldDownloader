@@ -16,13 +16,12 @@ package wdl.gui;
 import java.util.List;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.client.audio.SimpleSound;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.sounds.SoundEvents;
 import wdl.VersionConstants;
 import wdl.WDL;
 import wdl.gui.widget.ButtonDisplayGui;
@@ -52,7 +51,7 @@ public class GuiWDLUpdates extends WDLScreen {
 			super(GuiWDLUpdates.this, GuiWDLUpdates.this.width,
 					GuiWDLUpdates.this.height, TOP_MARGIN,
 					GuiWDLUpdates.this.height - BOTTOM_MARGIN,
-					(font.FONT_HEIGHT + 1) * 6 + 2);
+					(font.lineHeight + 1) * 6 + 2);
 		}
 
 		private class VersionEntry extends GuiListEntry<VersionEntry> {
@@ -71,7 +70,7 @@ public class GuiWDLUpdates extends WDLScreen {
 
 			public VersionEntry(Release release) {
 				this.release = release;
-				this.fontHeight = font.FONT_HEIGHT + 1;
+				this.fontHeight = font.lineHeight + 1;
 
 				this.title = buildReleaseTitle(release);
 				this.caption = buildVersionInfo(release);
@@ -82,7 +81,7 @@ public class GuiWDLUpdates extends WDLScreen {
 				body2 = (body.size() >= 2 ? body.get(1) : "");
 				body3 = (body.size() >= 3 ? body.get(2) : "");
 
-				time = I18n.format("wdl.gui.updates.update.releaseDate", release.date);
+				time = I18n.get("wdl.gui.updates.update.releaseDate", release.date);
 			}
 
 			@Override
@@ -94,10 +93,10 @@ public class GuiWDLUpdates extends WDLScreen {
 				String title;
 				//The 'isSelected' parameter is actually 'isHovered'
 				if (this.isSelected()) {
-					title = I18n.format("wdl.gui.updates.currentVersion",
+					title = I18n.get("wdl.gui.updates.currentVersion",
 							this.title);
 				} else if (this.release == recomendedRelease) {
-					title = I18n.format("wdl.gui.updates.recomendedVersion",
+					title = I18n.get("wdl.gui.updates.recomendedVersion",
 							this.title);
 				} else {
 					title = this.title;
@@ -120,10 +119,10 @@ public class GuiWDLUpdates extends WDLScreen {
 			@Override
 			public boolean mouseDown(int x, int y, int mouseButton) {
 				if (y > this.y && y < this.y + entryHeight) {
-					minecraft.displayGuiScreen(new GuiWDLSingleUpdate(GuiWDLUpdates.this,
+					minecraft.setScreen(new GuiWDLSingleUpdate(GuiWDLUpdates.this,
 							this.release));
 
-					minecraft.getSoundHandler().play(SimpleSound.master(
+					minecraft.getSoundManager().play(SimpleSoundInstance.forUI(
 							SoundEvents.UI_BUTTON_CLICK, 1.0f));
 					return true;
 				}
@@ -196,7 +195,7 @@ public class GuiWDLUpdates extends WDLScreen {
 	}
 
 	@Override
-	public void onClose() {
+	public void removed() {
 		WDL.saveGlobalProps();
 	}
 
@@ -208,16 +207,16 @@ public class GuiWDLUpdates extends WDLScreen {
 
 		if (!WDLUpdateChecker.hasFinishedUpdateCheck()) {
 			drawCenteredString(font,
-					I18n.format("wdl.gui.updates.pleaseWait"), width / 2,
+					I18n.get("wdl.gui.updates.pleaseWait"), width / 2,
 					height / 2, 0xFFFFFF);
 		} else if (WDLUpdateChecker.hasUpdateCheckFailed()) {
 			String reason = WDLUpdateChecker.getUpdateCheckFailReason();
 
 			drawCenteredString(font,
-					I18n.format("wdl.gui.updates.checkFailed"), width / 2,
-					height / 2 - font.FONT_HEIGHT / 2, 0xFF5555);
-			drawCenteredString(font, I18n.format(reason), width / 2,
-					height / 2 + font.FONT_HEIGHT / 2, 0xFF5555);
+					I18n.get("wdl.gui.updates.checkFailed"), width / 2,
+					height / 2 - font.lineHeight / 2, 0xFF5555);
+			drawCenteredString(font, I18n.get(reason), width / 2,
+					height / 2 + font.lineHeight / 2, 0xFF5555);
 		}
 	}
 
@@ -234,17 +233,17 @@ public class GuiWDLUpdates extends WDLScreen {
 			supportedVersions = buildSupportedVersions(versions);
 		}
 
-		return I18n.format("wdl.gui.updates.update.version", type, supportedVersions);
+		return I18n.get("wdl.gui.updates.update.version", type, supportedVersions);
 	}
 
 	private String buildSupportedVersions(String[] versions) {
 		String supportedVersions;
 		if (versions.length == 1) {
-			supportedVersions = I18n.format(
+			supportedVersions = I18n.get(
 					"wdl.gui.updates.update.version.listSingle",
 					versions[0]);
 		} else if (versions.length == 2) {
-			supportedVersions = I18n.format(
+			supportedVersions = I18n.get(
 					"wdl.gui.updates.update.version.listDouble",
 					versions[0], versions[1]);
 		} else {
@@ -252,15 +251,15 @@ public class GuiWDLUpdates extends WDLScreen {
 
 			for (int i = 0; i < versions.length; i++) {
 				if (i == 0) {
-					builder.append(I18n.format(
+					builder.append(I18n.get(
 							"wdl.gui.updates.update.version.listStart",
 							versions[i]));
 				} else if (i == versions.length - 1) {
-					builder.append(I18n.format(
+					builder.append(I18n.get(
 							"wdl.gui.updates.update.version.listEnd",
 							versions[i]));
 				} else {
-					builder.append(I18n.format(
+					builder.append(I18n.get(
 							"wdl.gui.updates.update.version.listMiddle",
 							versions[i]));
 				}
@@ -282,9 +281,9 @@ public class GuiWDLUpdates extends WDLScreen {
 			mcVersion = buildSupportedVersions(release.hiddenInfo.supportedMinecraftVersions);
 		}
 		if (release.prerelease) {
-			return I18n.format("wdl.gui.updates.update.title.prerelease", version, mcVersion);
+			return I18n.get("wdl.gui.updates.update.title.prerelease", version, mcVersion);
 		} else {
-			return I18n.format("wdl.gui.updates.update.title.release", version, mcVersion);
+			return I18n.get("wdl.gui.updates.update.title.release", version, mcVersion);
 		}
 	}
 
@@ -296,7 +295,7 @@ public class GuiWDLUpdates extends WDLScreen {
 		private final Release release;
 
 		public GuiWDLSingleUpdate(GuiWDLUpdates parent, Release releaseToShow) {
-			super(new StringTextComponent(buildReleaseTitle(releaseToShow))); // Already translated
+			super(new TextComponent(buildReleaseTitle(releaseToShow))); // Already translated
 			this.parent = parent;
 			this.release = releaseToShow;
 		}
@@ -305,7 +304,7 @@ public class GuiWDLUpdates extends WDLScreen {
 		public void init() {
 			this.addButton(new WDLButton(
 					this.width / 2 - 155, 18, 150, 20,
-					new TranslationTextComponent("wdl.gui.updates.update.viewOnline")) {
+					new TranslatableComponent("wdl.gui.updates.update.viewOnline")) {
 				public @Override void performAction() {
 					VersionedFunctions.openLink(release.URL);
 				}
@@ -313,7 +312,7 @@ public class GuiWDLUpdates extends WDLScreen {
 			if (release.hiddenInfo != null) {
 				this.addButton(new WDLButton(
 						this.width / 2 + 5, 18, 150, 20,
-						new TranslationTextComponent("wdl.gui.updates.update.viewForumPost")) {
+						new TranslatableComponent("wdl.gui.updates.update.viewForumPost")) {
 					public @Override void performAction() {
 						VersionedFunctions.openLink(release.hiddenInfo.post);
 					}
@@ -325,7 +324,7 @@ public class GuiWDLUpdates extends WDLScreen {
 			TextList list = new TextList(this, this.font, width, height, TOP_MARGIN, BOTTOM_MARGIN);
 
 			list.addLine(buildReleaseTitle(release));
-			list.addLine(I18n.format("wdl.gui.updates.update.releaseDate", release.date));
+			list.addLine(I18n.get("wdl.gui.updates.update.releaseDate", release.date));
 			list.addLine(buildVersionInfo(release));
 			list.addBlankLine();
 			list.addLine(release.textOnlyBody);

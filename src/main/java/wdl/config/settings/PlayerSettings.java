@@ -16,8 +16,7 @@ package wdl.config.settings;
 import static wdl.config.settings.Utils.*;
 
 import java.util.Map;
-
-import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.StringRepresentable;
 import wdl.config.EnumSetting;
 import wdl.config.IntSetting;
 
@@ -38,7 +37,7 @@ public final class PlayerSettings {
 	public static final IntSetting PLAYER_Y = new IntSetting("PlayerY", 127);
 	public static final IntSetting PLAYER_Z = new IntSetting("PlayerZ", 8);
 
-	public enum Health implements IStringSerializable {
+	public enum Health implements StringRepresentable {
 		KEEP("keep", -1),
 		FULL("20", 20);
 
@@ -57,12 +56,12 @@ public final class PlayerSettings {
 		}
 
 		@Override
-		public String getString() {
+		public String getSerializedName() {
 			return confName;
 		}
 	}
 
-	public enum Hunger implements IStringSerializable {
+	public enum Hunger implements StringRepresentable {
 		KEEP("keep", -1, -1, -1, -1),
 		FULL("20", 20, 0, 5.0f, 0.0f);
 
@@ -89,12 +88,12 @@ public final class PlayerSettings {
 		}
 
 		@Override
-		public String getString() {
+		public String getSerializedName() {
 			return confName;
 		}
 	}
 
-	public enum PlayerPos implements IStringSerializable {
+	public enum PlayerPos implements StringRepresentable {
 		KEEP("keep"),
 		XYZ("xyz");
 
@@ -110,7 +109,7 @@ public final class PlayerSettings {
 		}
 
 		@Override
-		public String getString() {
+		public String getSerializedName() {
 			return confName;
 		}
 	}

@@ -17,11 +17,10 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.WDL;
 import wdl.WDLPluginChannels;
 import wdl.config.IConfiguration;
@@ -37,7 +36,7 @@ public class GuiWDL extends WDLScreen {
 	/**
 	 * Tooltip to display on the given frame.
 	 */
-	private ITextComponent displayedTooltip = null;
+	private Component displayedTooltip = null;
 
 	private class GuiWDLButtonList extends GuiList<GuiWDLButtonList.ButtonEntry> {
 		public GuiWDLButtonList() {
@@ -47,13 +46,13 @@ public class GuiWDL extends WDLScreen {
 
 		@Override
 		public List<ButtonEntry> getEntries() {
-			return this.getEventListeners();
+			return this.children();
 		}
 
 		private class ButtonEntry extends GuiList.GuiListEntry<ButtonEntry> {
 			private final WDLButton button;
 
-			private final ITextComponent tooltip;
+			private final Component tooltip;
 
 			/**
 			 * Constructor.
@@ -71,13 +70,13 @@ public class GuiWDL extends WDLScreen {
 			 */
 			public ButtonEntry(String key, BiFunction<Screen, WDL, Screen> openFunc, boolean needsPerms) {
 				this.button = this.addButton(new ButtonDisplayGui(0, 0, 200, 20,
-						new TranslationTextComponent("wdl.gui.wdl." + key + ".name"),
+						new TranslatableComponent("wdl.gui.wdl." + key + ".name"),
 						() -> openFunc.apply(GuiWDL.this, GuiWDL.this.wdl)), -100, 0);
 				if (needsPerms) {
 					button.setEnabled(WDLPluginChannels.canDownloadAtAll());
 				}
 
-				this.tooltip = new TranslationTextComponent("wdl.gui.wdl." + key + ".description");
+				this.tooltip = new TranslatableComponent("wdl.gui.wdl." + key + ".description");
 			}
 
 			@Override
@@ -119,7 +118,7 @@ public class GuiWDL extends WDLScreen {
 	private WDLTextField worldname;
 
 	public GuiWDL(@Nullable Screen parent, WDL wdl) {
-		super(new TranslationTextComponent("wdl.gui.wdl.title", WDL.baseFolderName));
+		super(new TranslatableComponent("wdl.gui.wdl.title", WDL.baseFolderName));
 		this.parent = parent;
 		this.wdl = wdl;
 		this.config = WDL.serverProps;
@@ -131,8 +130,8 @@ public class GuiWDL extends WDLScreen {
 	@Override
 	public void init() {
 		this.worldname = this.addTextField(new WDLTextField(this.font,
-				this.width / 2 - 155, 19, 150, 18, new TranslationTextComponent("wdl.gui.wdl.worldname")));
-		this.worldname.setText(this.config.getValue(MiscSettings.SERVER_NAME));
+				this.width / 2 - 155, 19, 150, 18, new TranslatableComponent("wdl.gui.wdl.worldname")));
+		this.worldname.setValue(this.config.getValue(MiscSettings.SERVER_NAME));
 
 		this.addButton(new ButtonDisplayGui(this.width / 2 - 100, this.height - 29,
 				200, 20, parent));
@@ -151,9 +150,9 @@ public class GuiWDL extends WDLScreen {
 
 		super.render(mouseX, mouseY, partialTicks);
 
-		String name = I18n.format("wdl.gui.wdl.worldname");
+		String name = I18n.get("wdl.gui.wdl.worldname");
 		this.drawString(this.font, name, this.worldname.x
-				- this.font.getStringWidth(name + " "), 26, 0xFFFFFF);
+				- this.font.width(name + " "), 26, 0xFFFFFF);
 
 		this.drawGuiInfoBox(displayedTooltip, width, height, 48);
 	}

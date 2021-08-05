@@ -13,8 +13,8 @@
  */
 package wdl;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.HangingEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.decoration.HangingEntity;
 import wdl.api.IEntityEditor;
 import wdl.api.IWDLMod;
 import wdl.api.IWDLModDescripted;

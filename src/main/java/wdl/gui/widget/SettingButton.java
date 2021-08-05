@@ -13,7 +13,7 @@
  */
 package wdl.gui.widget;
 
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.chat.Component;
 import wdl.config.CyclableSetting;
 import wdl.config.IConfiguration;
 
@@ -47,7 +47,7 @@ public class SettingButton extends WDLButton {
 	/**
 	 * Gets a translated tooltip for this button.
 	 */
-	public ITextComponent getTooltip() {
+	public Component getTooltip() {
 		return setting.getDescription();
 	}
 }

@@ -15,24 +15,24 @@
 package pokechu22.fabricwdl.mixin;
 
 
-import net.minecraft.client.gui.screen.IngameMenuScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import wdl.ducks.IBaseChangesApplied;
 
-@Mixin(IngameMenuScreen.class)
+@Mixin(PauseScreen.class)
 public class MixinGuiIngameMenu extends Screen implements IBaseChangesApplied {
 
-  protected MixinGuiIngameMenu(ITextComponent iTextComponent) {
+  protected MixinGuiIngameMenu(Component iTextComponent) {
     super(iTextComponent);
   }
 
   @Inject(method="init", at=@At("RETURN"))
   private void onInitGui(CallbackInfo ci) {
-    wdl.WDLHooks.injectWDLButtons((IngameMenuScreen)(Object)this, buttons, this::addButton);
+    wdl.WDLHooks.injectWDLButtons((PauseScreen)(Object)this, buttons, this::addButton);
   }
 }

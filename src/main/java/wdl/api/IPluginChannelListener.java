@@ -13,7 +13,7 @@
  */
 package wdl.api;
 
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.multiplayer.ClientLevel;
 
 public interface IPluginChannelListener extends IWDLMod {
 	/**
@@ -26,6 +26,6 @@ public interface IPluginChannelListener extends IWDLMod {
 	 * @param packetData
 	 *            The payload of the packet.
 	 */
-	public abstract void onPluginChannelPacket(ClientWorld world,
+	public abstract void onPluginChannelPacket(ClientLevel world,
 			String channel, byte[] packetData);
 }

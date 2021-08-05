@@ -15,12 +15,10 @@ package wdl;
 
 import java.lang.reflect.Field;
 import java.util.Map;
-
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-
-import net.minecraft.client.gui.screen.inventory.CreativeScreen;
-import net.minecraft.inventory.container.Container;
 
 /**
  * Reflection utilities, mainly to work with private fields.
@@ -212,11 +210,11 @@ public class ReflectionUtils {
 
 	/**
 	 * Checks if the given class is
-	 * {@link CreativeScreen.ContainerCreative}. In 1.12, this class is
+	 * {@link CreativeModeInventoryScreen.ContainerCreative}. In 1.12, this class is
 	 * public, but in older versions (e.g. 1.10) it isn't.
 	 * <p>
 	 * Note that this implementation checks whether it's an inner class of
-	 * {@link CreativeScreen}. This implementation works fine for versions
+	 * {@link CreativeModeInventoryScreen}. This implementation works fine for versions
 	 * with <code>InnerClasses</code> data, but older versions of Minecraft
 	 * (1.8, but not 1.8.9) do not contain this data.  If 1.8 is eventually supported,
 	 * this method will not work for it.
@@ -224,9 +222,9 @@ public class ReflectionUtils {
 	 * @param containerClass
 	 *            The class to check
 	 */
-	public static boolean isCreativeContainer(Class<? extends Container> containerClass) {
+	public static boolean isCreativeContainer(Class<? extends AbstractContainerMenu> containerClass) {
 		try {
-			return CreativeScreen.class.equals(containerClass.getEnclosingClass());
+			return CreativeModeInventoryScreen.class.equals(containerClass.getEnclosingClass());
 		} catch (Exception e) {
 			// This one really should never happen (unless maybe an
 			// external mod does some stupid security manager stuff)

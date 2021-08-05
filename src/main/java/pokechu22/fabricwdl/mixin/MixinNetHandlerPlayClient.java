@@ -13,71 +13,70 @@ package pokechu22.fabricwdl.mixin;/*
  * Do not redistribute (in modified or unmodified form) without prior permission.
  */
 
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEventPacket;
+import net.minecraft.network.protocol.game.ClientboundChatPacket;
+import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket;
+import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import net.minecraft.client.network.play.ClientPlayNetHandler;
-import net.minecraft.client.network.play.IClientPlayNetHandler;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.network.play.server.SBlockActionPacket;
-import net.minecraft.network.play.server.SChatPacket;
-import net.minecraft.network.play.server.SCustomPayloadPlayPacket;
-import net.minecraft.network.play.server.SMapDataPacket;
-import net.minecraft.network.play.server.SUnloadChunkPacket;
-import net.minecraft.util.text.ITextComponent;
 import wdl.ducks.IBaseChangesApplied;
 
-@Mixin(ClientPlayNetHandler.class)
-public abstract class MixinNetHandlerPlayClient implements IClientPlayNetHandler, IBaseChangesApplied {
+@Mixin(ClientPacketListener.class)
+public abstract class MixinNetHandlerPlayClient implements ClientGamePacketListener, IBaseChangesApplied {
   // Automatic remapping sometimes fails; see
   // https://github.com/Pokechu22/WorldDownloader/issues/175
   @Shadow
-  private ClientWorld world;
+  private ClientLevel level;
 
-  @Inject(method="processChunkUnload", at=@At("HEAD"))
-  private void onProcessChunkUnload(SUnloadChunkPacket packetIn, CallbackInfo ci) {
+  @Inject(method="handleForgetLevelChunk", at=@At("HEAD"))
+  private void onProcessChunkUnload(ClientboundForgetLevelChunkPacket packetIn, CallbackInfo ci) {
     /* WDL >>> */
-    wdl.WDLHooks.onNHPCHandleChunkUnload((ClientPlayNetHandler)(Object)this, this.world, packetIn);
+    wdl.WDLHooks.onNHPCHandleChunkUnload((ClientPacketListener)(Object)this, this.level, packetIn);
     /* <<< WDL */
     //more down here
   }
   @Inject(method="onDisconnect", at=@At("HEAD"))
-  private void onDisconnect(ITextComponent reason, CallbackInfo ci) {
+  private void onDisconnect(Component reason, CallbackInfo ci) {
     /* WDL >>> */
-    wdl.WDLHooks.onNHPCDisconnect((ClientPlayNetHandler)(Object)this, reason);
+    wdl.WDLHooks.onNHPCDisconnect((ClientPacketListener)(Object)this, reason);
     /* <<< WDL */
     //more down here
   }
   @Inject(method="handleChat", at=@At("RETURN"))
-  private void onHandleChat(SChatPacket p_147251_1_, CallbackInfo ci) {
+  private void onHandleChat(ClientboundChatPacket p_147251_1_, CallbackInfo ci) {
     //more up here
     /* WDL >>> */
-    wdl.WDLHooks.onNHPCHandleChat((ClientPlayNetHandler)(Object)this, p_147251_1_);
+    wdl.WDLHooks.onNHPCHandleChat((ClientPacketListener)(Object)this, p_147251_1_);
     /* <<< WDL */
   }
-  @Inject(method="handleBlockAction", at=@At("RETURN"))
-  private void onHandleBlockAction(SBlockActionPacket packetIn, CallbackInfo ci) {
+  @Inject(method="handleBlockEvent", at=@At("RETURN"))
+  private void onHandleBlockAction(ClientboundBlockEventPacket packetIn, CallbackInfo ci) {
     //more up here
     /* WDL >>> */
-    wdl.WDLHooks.onNHPCHandleBlockAction((ClientPlayNetHandler)(Object)this, packetIn);
+    wdl.WDLHooks.onNHPCHandleBlockAction((ClientPacketListener)(Object)this, packetIn);
     /* <<< WDL */
   }
-  @Inject(method="handleMaps", at=@At("RETURN"))
-  private void onHandleMaps(SMapDataPacket packetIn, CallbackInfo ci) {
+  @Inject(method="handleMapItemData", at=@At("RETURN"))
+  private void onHandleMaps(ClientboundMapItemDataPacket packetIn, CallbackInfo ci) {
     //more up here
     /* WDL >>> */
-    wdl.WDLHooks.onNHPCHandleMaps((ClientPlayNetHandler)(Object)this, packetIn);
+    wdl.WDLHooks.onNHPCHandleMaps((ClientPacketListener)(Object)this, packetIn);
     /* <<< WDL */
   }
   @Inject(method="handleCustomPayload", at=@At("HEAD"))
-  private void onHandleCustomPayload(SCustomPayloadPlayPacket packetIn, CallbackInfo ci) {
+  private void onHandleCustomPayload(ClientboundCustomPayloadPacket packetIn, CallbackInfo ci) {
     // Inject at HEAD because otherwise Forge will read the packet content first,
     // which irreversibly clears the buffer (without doing other weird hacky things)
     /* WDL >>> */
-    wdl.WDLHooks.onNHPCHandleCustomPayload((ClientPlayNetHandler)(Object)this, packetIn);
+    wdl.WDLHooks.onNHPCHandleCustomPayload((ClientPacketListener)(Object)this, packetIn);
     /* <<< WDL */
     //more down here
   }

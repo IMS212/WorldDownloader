@@ -14,13 +14,12 @@
 package wdl.config;
 
 import java.util.function.Function;
-
-import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.StringRepresentable;
 
 /**
  * A setting that uses an enum.
  */
-public final class EnumSetting<T extends Enum<T> & IStringSerializable> extends BaseCyclableSetting<T> {
+public final class EnumSetting<T extends Enum<T> & StringRepresentable> extends BaseCyclableSetting<T> {
 
 	private T[] values;
 

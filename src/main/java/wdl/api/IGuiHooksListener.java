@@ -13,10 +13,10 @@
  */
 package wdl.api;
 
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 
 public interface IGuiHooksListener extends IWDLMod {
 	/**
@@ -38,8 +38,8 @@ public interface IGuiHooksListener extends IWDLMod {
 	 * @return Whether the given mod handled the event (if <code>false</code> is
 	 *         returned, it'll be passed on to the next mod).
 	 */
-	public abstract boolean onBlockGuiClosed(ClientWorld world, BlockPos pos,
-			Container container);
+	public abstract boolean onBlockGuiClosed(ClientLevel world, BlockPos pos,
+			AbstractContainerMenu container);
 
 	/**
 	 * Called when an entity's GUI closes. <br/>
@@ -58,6 +58,6 @@ public interface IGuiHooksListener extends IWDLMod {
 	 * @return Whether the given mod handled the event (if <code>false</code> is
 	 *         returned, it'll be passed on to the next mod).
 	 */
-	public abstract boolean onEntityGuiClosed(ClientWorld world, Entity entity,
-			Container container);
+	public abstract boolean onEntityGuiClosed(ClientLevel world, Entity entity,
+			AbstractContainerMenu container);
 }

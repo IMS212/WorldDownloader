@@ -14,6 +14,7 @@
 package wdl.gui.widget;
 
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,37 +22,34 @@ import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 
 import org.lwjgl.glfw.GLFW;
-
-import com.mojang.blaze3d.matrix.MatrixStack;
-
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.client.gui.widget.list.ExtendedList;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.network.chat.TextComponent;
 import wdl.gui.widget.ExtGuiList.ExtGuiListEntry;
 import wdl.versioned.VersionedFunctions;
 
-abstract class ExtGuiList<T extends ExtGuiListEntry<T>> extends ExtendedList<T> implements IExtGuiList<T> {
+abstract class ExtGuiList<T extends ExtGuiListEntry<T>> extends ObjectSelectionList<T> implements IExtGuiList<T> {
 
-	static abstract class ExtGuiListEntry<T extends ExtGuiListEntry<T>> extends AbstractListEntry<T> implements IExtGuiListEntry<T> {
+	static abstract class ExtGuiListEntry<T extends ExtGuiListEntry<T>> extends net.minecraft.client.gui.components.ObjectSelectionList.Entry<T> implements IExtGuiListEntry<T> {
 
 		private static class ButtonWrapper {
-			public final Widget button;
+			public final AbstractWidget button;
 			public final int x;
 			public final int y;
-			public ButtonWrapper(Widget button, int x, int y) {
+			public ButtonWrapper(AbstractWidget button, int x, int y) {
 				this.button = button;
 				this.x = x;
 				this.y = y;
 			}
 		}
 		private static class TextFieldWrapper {
-			public final TextFieldWidget field;
+			public final EditBox field;
 			public final int x;
 			public final int y;
-			public TextFieldWrapper(TextFieldWidget field, int x, int y) {
+			public TextFieldWrapper(EditBox field, int x, int y) {
 				this.field = field;
 				this.x = x;
 				this.y = y;
@@ -63,22 +61,22 @@ abstract class ExtGuiList<T extends ExtGuiListEntry<T>> extends ExtendedList<T> 
 		@Nullable
 		private ButtonWrapper activeButton;
 		@Nullable
-		private MatrixStack matrixStack;
+		private PoseStack matrixStack;
 
 		@Override
-		public final <B extends Widget> B addButton(B button, int x, int y) {
+		public final <B extends AbstractWidget> B addButton(B button, int x, int y) {
 			this.buttonList.add(new ButtonWrapper(button, x, y));
 			return button;
 		}
 
 		@Override
-		public final <B extends TextFieldWidget> B addTextField(B field, int x, int y) {
+		public final <B extends EditBox> B addTextField(B field, int x, int y) {
 			this.fieldList.add(new TextFieldWrapper(field, x, y));
 			return field;
 		}
 
 		@Override
-		public final void render(MatrixStack matrixStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean mouseOver, float partialTicks) {
+		public final void render(PoseStack matrixStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean mouseOver, float partialTicks) {
 			this.matrixStack = matrixStack;
 			// XXX: Note that y and x here are swapped!
 			this.drawEntry(x, y, entryWidth, entryHeight, mouseX, mouseY);
@@ -106,7 +104,7 @@ abstract class ExtGuiList<T extends ExtGuiListEntry<T>> extends ExtendedList<T> 
 				}
 			}
 			for (TextFieldWrapper field : this.fieldList) { 
-				if (field.field.getVisible() && field.field.mouseClicked(arg0, arg1, arg2)) {
+				if (field.field.isVisible() && field.field.mouseClicked(arg0, arg1, arg2)) {
 					result = true;
 				}
 			}
@@ -176,11 +174,11 @@ abstract class ExtGuiList<T extends ExtGuiListEntry<T>> extends ExtendedList<T> 
 
 	private int y;
 	@Nullable
-	private MatrixStack matrixStack;
+	private PoseStack matrixStack;
 
 	@Override
 	public List<T> getEntries() {
-		return super.getEventListeners();
+		return super.children();
 	}
 
 	@Override
@@ -246,7 +244,7 @@ abstract class ExtGuiList<T extends ExtGuiListEntry<T>> extends ExtendedList<T> 
 	}
 
 	@Override
-	public final void render(MatrixStack matrixStack, int mouseXIn, int mouseYIn, float partialTicks) {
+	public final void render(PoseStack matrixStack, int mouseXIn, int mouseYIn, float partialTicks) {
 		this.matrixStack = matrixStack;
 		this.render(mouseXIn, mouseYIn, partialTicks);
 		this.matrixStack = null;
@@ -287,14 +285,14 @@ abstract class ExtGuiList<T extends ExtGuiListEntry<T>> extends ExtendedList<T> 
 	public void fill(int left, int top, int right, int bottom, int color) {
 		super.fill(matrixStack, left, top, right, bottom, color);
 	}
-	public void drawCenteredString(FontRenderer font, String str, int x, int y, int color) {
-		super.drawCenteredString(matrixStack, font, new StringTextComponent(str), x, y, color);
+	public void drawCenteredString(Font font, String str, int x, int y, int color) {
+		super.drawCenteredString(matrixStack, font, new TextComponent(str), x, y, color);
 	}
-	public void drawRightAlignedString(FontRenderer font, String str, int x, int y, int color) {
+	public void drawRightAlignedString(Font font, String str, int x, int y, int color) {
 		super.drawString(matrixStack, font, str, x, y, color);
 	}
-	public void drawString(FontRenderer font, String str, int x, int y, int color) {
-		super.drawString(matrixStack, font, new StringTextComponent(str), x, y, color);
+	public void drawString(Font font, String str, int x, int y, int color) {
+		super.drawString(matrixStack, font, new TextComponent(str), x, y, color);
 	}
 	public void blit(int x, int y, int textureX, int textureY, int width, int height) {
 		super.blit(matrixStack, x, y, textureX, textureY, width, height);

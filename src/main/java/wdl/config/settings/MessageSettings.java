@@ -14,9 +14,8 @@
 package wdl.config.settings;
 
 import java.util.Optional;
-
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.MessageTypeCategory;
 import wdl.WDLMessages.MessageRegistration;
 import wdl.api.IWDLMessageType;
@@ -84,12 +83,12 @@ public final class MessageSettings {
 		}
 
 		@Override
-		public ITextComponent getButtonText(Boolean curValue) {
-			return new TranslationTextComponent("wdl.gui.messages.group." + curValue);
+		public Component getButtonText(Boolean curValue) {
+			return new TranslatableComponent("wdl.gui.messages.group." + curValue);
 		}
 
 		@Override
-		public ITextComponent getDescription() {
+		public Component getDescription() {
 			return category.getDescription();
 		}
 	}
@@ -146,12 +145,12 @@ public final class MessageSettings {
 		}
 
 		@Override
-		public ITextComponent getButtonText(Boolean curValue) {
-			return new TranslationTextComponent("wdl.gui.messages.message." + curValue, registration.type.getDisplayName());
+		public Component getButtonText(Boolean curValue) {
+			return new TranslatableComponent("wdl.gui.messages.message." + curValue, registration.type.getDisplayName());
 		}
 
 		@Override
-		public ITextComponent getDescription() {
+		public Component getDescription() {
 			return registration.type.getDescription();
 		}
 	}

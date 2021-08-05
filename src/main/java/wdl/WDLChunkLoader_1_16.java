@@ -18,32 +18,31 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map.Entry;
-
+import net.minecraft.core.SectionPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongArrayTag;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.ChunkTickList;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.ServerTickList;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkBiomeContainer;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.DataLayer;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.ProtoTickList;
+import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.chunk.storage.ChunkStorage;
+import net.minecraft.world.level.chunk.storage.IOWorker;
+import net.minecraft.world.level.chunk.storage.RegionFile;
+import net.minecraft.world.level.chunk.storage.RegionFileStorage;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.lighting.LevelLightEngine;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.shorts.ShortList;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.LongArrayNBT;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.util.palette.UpgradeData;
-import net.minecraft.world.LightType;
-import net.minecraft.world.SerializableTickList;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeContainer;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkPrimerTickList;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.chunk.NibbleArray;
-import net.minecraft.world.chunk.storage.ChunkLoader;
-import net.minecraft.world.chunk.storage.IOWorker;
-import net.minecraft.world.chunk.storage.RegionFile;
-import net.minecraft.world.chunk.storage.RegionFileCache;
-import net.minecraft.world.gen.Heightmap;
-import net.minecraft.world.lighting.WorldLightManager;
-import net.minecraft.world.server.ServerTickList;
 import org.jetbrains.annotations.Nullable;
 import wdl.config.settings.MiscSettings;
 import wdl.versioned.IDimensionWrapper;
@@ -51,12 +50,12 @@ import wdl.versioned.ISaveHandlerWrapper;
 import wdl.versioned.VersionedFunctions;
 
 /**
- * Alternative implementation of {@link ChunkLoader} that handles editing
+ * Alternative implementation of {@link ChunkStorage} that handles editing
  * WDL-specific properties of chunks as they are being saved.
  *
  * This variant is used for chunks from 1.13 and later.
  */
-abstract class WDLChunkLoaderBase extends ChunkLoader {
+abstract class WDLChunkLoaderBase extends ChunkStorage {
 
 	/**
 	 * Gets the save folder for the given WorldProvider, respecting Forge's
@@ -100,8 +99,8 @@ abstract class WDLChunkLoaderBase extends ChunkLoader {
 		super(file, null, /* enable flushing */true);
 		this.wdl = wdl;
 		this.chunkSaveLocation = file;
-		IOWorker worker = ReflectionUtils.findAndGetPrivateField(this, ChunkLoader.class, IOWorker.class);
-		RegionFileCache rfc = ReflectionUtils.findAndGetPrivateField(worker, RegionFileCache.class);
+		IOWorker worker = ReflectionUtils.findAndGetPrivateField(this, ChunkStorage.class, IOWorker.class);
+		RegionFileStorage rfc = ReflectionUtils.findAndGetPrivateField(worker, RegionFileStorage.class);
 		this.cache = ReflectionUtils.findAndGetPrivateField(rfc, Long2ObjectLinkedOpenHashMap.class);
 	}
 
@@ -111,16 +110,16 @@ abstract class WDLChunkLoaderBase extends ChunkLoader {
 	 * Note that while the normal implementation swallows Exceptions, this
 	 * version does not.
 	 */
-	public synchronized void saveChunk(World world, IChunk chunk) throws Exception {
+	public synchronized void saveChunk(Level world, ChunkAccess chunk) throws Exception {
 		wdl.saveHandler.checkSessionLock();
 
-		CompoundNBT levelTag = writeChunkToNBT((Chunk)chunk, world);
+		CompoundTag levelTag = writeChunkToNBT((LevelChunk)chunk, world);
 
-		CompoundNBT rootTag = new CompoundNBT();
+		CompoundTag rootTag = new CompoundTag();
 		rootTag.put("Level", levelTag);
 		rootTag.putInt("DataVersion", VersionConstants.getDataVersion());
 
-		writeChunk(chunk.getPos(), rootTag);
+		write(chunk.getPos(), rootTag);
 
 		wdl.unloadChunk(chunk.getPos());
 	}
@@ -129,7 +128,7 @@ abstract class WDLChunkLoaderBase extends ChunkLoader {
 	 * Writes the given chunk, creating an NBT compound tag.
 	 *
 	 * Note that this does <b>not</b> override the private method
-	 * {@link ChunkLoader#writeChunk(ChunkPos, CompoundNBT)} (Chunk, World, NBTCompoundNBT)}.
+	 * {@link ChunkStorage#write(ChunkPos, CompoundTag)} (Chunk, World, NBTCompoundNBT)}.
 	 * That method is private and cannot be overridden; plus, this version
 	 * returns a tag rather than modifying the one passed as an argument.
 	 *
@@ -140,8 +139,8 @@ abstract class WDLChunkLoaderBase extends ChunkLoader {
 	 *            time.
 	 * @return A new CompoundNBT
 	 */
-	private CompoundNBT writeChunkToNBT(Chunk chunk, World world) {
-		CompoundNBT compound = new CompoundNBT();
+	private CompoundTag writeChunkToNBT(LevelChunk chunk, Level world) {
+		CompoundTag compound = new CompoundTag();
 
 		ChunkPos chunkpos = chunk.getPos();
 		compound.putInt("xPos", chunkpos.x);
@@ -155,26 +154,26 @@ abstract class WDLChunkLoaderBase extends ChunkLoader {
 			compound.put("UpgradeData", upgradedata.write());
 		}
 
-		ChunkSection[] chunkSections = chunk.getSections();
-		ListNBT chunkSectionList = new ListNBT();
-		WorldLightManager worldlightmanager = world.getChunkProvider().getLightManager();
+		LevelChunkSection[] chunkSections = chunk.getSections();
+		ListTag chunkSectionList = new ListTag();
+		LevelLightEngine worldlightmanager = world.getChunkSource().getLightEngine();
 
 		// XXX: VersionedFunctions.hasSkyLight is inapplicable here presumably, but it might still need to be used somehow
 		for (int y = -1; y < 17; ++y) {
 			final int f_y = y; // Compiler food
-			ChunkSection chunkSection = Arrays.stream(chunkSections)
-					.filter(section -> section != null && section.getYLocation() >> 4 == f_y)
+			LevelChunkSection chunkSection = Arrays.stream(chunkSections)
+					.filter(section -> section != null && section.bottomBlockY() >> 4 == f_y)
 					.findFirst()
-					.orElse(Chunk.EMPTY_SECTION);
-			NibbleArray blocklightArray = worldlightmanager.getLightEngine(LightType.BLOCK)
-					.getData(SectionPos.from(chunkpos, y));
-			NibbleArray skylightArray = worldlightmanager.getLightEngine(LightType.SKY)
-					.getData(SectionPos.from(chunkpos, y));
-			if (chunkSection != Chunk.EMPTY_SECTION || blocklightArray != null || skylightArray != null) {
-				CompoundNBT sectionNBT = new CompoundNBT();
+					.orElse(LevelChunk.EMPTY_SECTION);
+			DataLayer blocklightArray = worldlightmanager.getLayerListener(LightLayer.BLOCK)
+					.getDataLayerData(SectionPos.of(chunkpos, y));
+			DataLayer skylightArray = worldlightmanager.getLayerListener(LightLayer.SKY)
+					.getDataLayerData(SectionPos.of(chunkpos, y));
+			if (chunkSection != LevelChunk.EMPTY_SECTION || blocklightArray != null || skylightArray != null) {
+				CompoundTag sectionNBT = new CompoundTag();
 				sectionNBT.putByte("Y", (byte) (y & 255));
-				if (chunkSection != Chunk.EMPTY_SECTION) {
-					chunkSection.getData().writeChunkPalette(sectionNBT, "Palette", "BlockStates");
+				if (chunkSection != LevelChunk.EMPTY_SECTION) {
+					chunkSection.getStates().write(sectionNBT, "Palette", "BlockStates");
 				}
 
 				if (blocklightArray != null && !blocklightArray.isEmpty()) {
@@ -191,56 +190,56 @@ abstract class WDLChunkLoaderBase extends ChunkLoader {
 
 		compound.put("Sections", chunkSectionList);
 
-		if (chunk.hasLight()) {
+		if (chunk.isLightCorrect()) {
 			compound.putBoolean("isLightOn", true);
 		}
 
-		BiomeContainer biomes = chunk.getBiomes();
+		ChunkBiomeContainer biomes = chunk.getBiomes();
 		if (biomes != null) {
-			compound.putIntArray("Biomes", biomes.getBiomeIds());
+			compound.putIntArray("Biomes", biomes.writeBiomes());
 		}
 
-		chunk.setHasEntities(false);
-		ListNBT entityList = getEntityList(chunk);
+		chunk.setLastSaveHadEntities(false);
+		ListTag entityList = getEntityList(chunk);
 		compound.put("Entities", entityList);
 
-		ListNBT tileEntityList = getTileEntityList(chunk);
+		ListTag tileEntityList = getTileEntityList(chunk);
 		compound.put("TileEntities", tileEntityList);
 
 		// XXX: Note: This was re-sorted on mojang's end; I've undone that.
-		if (world.getPendingBlockTicks() instanceof ServerTickList) {
-			compound.put("TileTicks", ((ServerTickList<?>) world.getPendingBlockTicks()).func_219503_a(chunkpos));
+		if (world.getBlockTicks() instanceof ServerTickList) {
+			compound.put("TileTicks", ((ServerTickList<?>) world.getBlockTicks()).save(chunkpos));
 		}
-		if (world.getPendingFluidTicks() instanceof ServerTickList) {
-			compound.put("LiquidTicks", ((ServerTickList<?>) world.getPendingFluidTicks()).func_219503_a(chunkpos));
+		if (world.getLiquidTicks() instanceof ServerTickList) {
+			compound.put("LiquidTicks", ((ServerTickList<?>) world.getLiquidTicks()).save(chunkpos));
 		}
 
-		compound.put("PostProcessing", listArrayToTag(chunk.getPackedPositions()));
+		compound.put("PostProcessing", listArrayToTag(chunk.getPostProcessing()));
 
-		if (chunk.getBlocksToBeTicked() instanceof ChunkPrimerTickList) {
-			compound.put("ToBeTicked", ((ChunkPrimerTickList<?>) chunk.getBlocksToBeTicked()).write());
+		if (chunk.getBlockTicks() instanceof ProtoTickList) {
+			compound.put("ToBeTicked", ((ProtoTickList<?>) chunk.getBlockTicks()).save());
 		}
 
 		// XXX: These are new, and they might conflict with the other one.  Not sure which should be used.
-		if (chunk.getBlocksToBeTicked() instanceof SerializableTickList) {
-			compound.put("TileTicks", ((SerializableTickList<?>) chunk.getBlocksToBeTicked())
-					.func_234857_b_());
+		if (chunk.getBlockTicks() instanceof ChunkTickList) {
+			compound.put("TileTicks", ((ChunkTickList<?>) chunk.getBlockTicks())
+					.save());
 		}
 
-		if (chunk.getFluidsToBeTicked() instanceof ChunkPrimerTickList) {
-			compound.put("LiquidsToBeTicked", ((ChunkPrimerTickList<?>) chunk.getFluidsToBeTicked()).write());
+		if (chunk.getLiquidTicks() instanceof ProtoTickList) {
+			compound.put("LiquidsToBeTicked", ((ProtoTickList<?>) chunk.getLiquidTicks()).save());
 		}
 
-		if (chunk.getFluidsToBeTicked() instanceof SerializableTickList) {
-			compound.put("LiquidTicks", ((SerializableTickList<?>) chunk.getFluidsToBeTicked())
-					.func_234857_b_());
+		if (chunk.getLiquidTicks() instanceof ChunkTickList) {
+			compound.put("LiquidTicks", ((ChunkTickList<?>) chunk.getLiquidTicks())
+					.save());
 		}
 
-		CompoundNBT heightMaps = new CompoundNBT();
+		CompoundTag heightMaps = new CompoundTag();
 
-		for (Entry<Heightmap.Type, Heightmap> entry : chunk.getHeightmaps()) {
-			if (chunk.getStatus().getHeightMaps().contains(entry.getKey())) {
-				heightMaps.put(entry.getKey().getId(), new LongArrayNBT(entry.getValue().getDataArray()));
+		for (Entry<Heightmap.Types, Heightmap> entry : chunk.getHeightmaps()) {
+			if (chunk.getStatus().heightmapsAfter().contains(entry.getKey())) {
+				heightMaps.put(entry.getKey().getSerializationKey(), new LongArrayTag(entry.getValue().getRawData()));
 			}
 		}
 
@@ -251,8 +250,8 @@ abstract class WDLChunkLoaderBase extends ChunkLoader {
 		return compound;
 	}
 
-	protected abstract ListNBT getEntityList(Chunk chunk);
-	protected abstract ListNBT getTileEntityList(Chunk chunk);
+	protected abstract ListTag getEntityList(LevelChunk chunk);
+	protected abstract ListTag getTileEntityList(LevelChunk chunk);
 
 	/**
 	 * Gets a count of how many chunks there are that still need to be written to
@@ -264,11 +263,11 @@ abstract class WDLChunkLoaderBase extends ChunkLoader {
 		return this.cache.size(); // XXX This is actually the number of regions
 	}
 
-	private ListNBT listArrayToTag(ShortList[] list) {
-		ListNBT listnbt = new ListNBT();
+	private ListTag listArrayToTag(ShortList[] list) {
+		ListTag listnbt = new ListTag();
 
 		for (ShortList shortlist : list) {
-			ListNBT sublist;
+			ListTag sublist;
 			if (shortlist != null) {
 				sublist = VersionedFunctions.createShortListTag(shortlist.toShortArray());
 			} else {
@@ -289,6 +288,6 @@ abstract class WDLChunkLoaderBase extends ChunkLoader {
 	}
 
 	public void flush() {
-		this.func_227079_i_();
+		this.flushWorker();
 	}
 }

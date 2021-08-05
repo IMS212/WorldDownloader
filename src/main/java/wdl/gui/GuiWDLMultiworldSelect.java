@@ -16,11 +16,10 @@ package wdl.gui;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.WDL;
 import wdl.config.Configuration;
 import wdl.config.IConfiguration;
@@ -37,7 +36,7 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 	private class WorldGuiButton extends WDLButton {
 		private final int buttonOffset;
 		public WorldGuiButton(int buttonOffset, int x, int y, int width, int height) {
-			super(x, y, width, height, new StringTextComponent(""));
+			super(x, y, width, height, new TextComponent(""));
 			this.buttonOffset = buttonOffset;
 		}
 
@@ -45,10 +44,10 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 		public void beforeDraw() {
 			MultiworldInfo info = getWorldInfo();
 			if (info == null) {
-				setMessage(new StringTextComponent("")); // XXX
+				setMessage(new TextComponent("")); // XXX
 				setEnabled(false);
 			} else {
-				setMessage(new StringTextComponent(info.displayName));
+				setMessage(new TextComponent(info.displayName));
 				setEnabled(true);
 			}
 
@@ -109,7 +108,7 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 				// TODO: More info than just dimensions - EG if the
 				// chunk the player is in is added, etc.
 				description.add("Defined dimensions:");
-				File savesFolder = new File(wdl.minecraft.gameDir, "saves");
+				File savesFolder = new File(wdl.minecraft.gameDirectory, "saves");
 				File world = new File(savesFolder, WDL.getWorldFolderName(folderName));
 				File[] subfolders = world.listFiles();
 
@@ -224,7 +223,7 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 	 */
 	private String searchText = "";
 
-	public GuiWDLMultiworldSelect(WDL wdl, ITextComponent title, WorldSelectionCallback callback) {
+	public GuiWDLMultiworldSelect(WDL wdl, Component title, WorldSelectionCallback callback) {
 		super(wdl, title);
 
 		this.wdl = wdl;
@@ -268,7 +267,7 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 		int y = this.height - 49;
 
 		this.addButton(new WDLButton(this.width / 2 - 155, this.height - 25, 150, 20,
-				new TranslationTextComponent("gui.cancel")) {
+				new TranslatableComponent("gui.cancel")) {
 			public @Override void performAction() {
 				callback.onCancel();
 			}
@@ -276,7 +275,7 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 
 		this.acceptBtn = this.addButton(new WDLButton(
 				this.width / 2 + 5, this.height - 25, 150, 20,
-				new TranslationTextComponent("wdl.gui.multiworldSelect.done")) {
+				new TranslatableComponent("wdl.gui.multiworldSelect.done")) {
 			public @Override void performAction() {
 				callback.onWorldSelected(selectedMultiWorld.folderName);
 			}
@@ -284,7 +283,7 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 		this.acceptBtn.setEnabled(selectedMultiWorld != null);
 
 		prevButton = this.addButton(new WDLButton(this.width / 2 - offset, y, 20, 20,
-				new StringTextComponent("<")) {
+				new TextComponent("<")) {
 			public @Override void performAction() {
 				index--;
 			}
@@ -297,7 +296,7 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 
 		nextButton = this.addButton(new WDLButton(
 				this.width / 2 - offset + 25 + numWorldButtons * 155,
-				y, 20, 20, new StringTextComponent(">")) {
+				y, 20, 20, new TextComponent(">")) {
 			public @Override void performAction() {
 				index++;
 			}
@@ -305,7 +304,7 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 
 		this.newWorldButton = this.addButton(new WDLButton(
 				this.width / 2 - 155, 29, 150, 20,
-				new TranslationTextComponent("wdl.gui.multiworldSelect.newName")) {
+				new TranslatableComponent("wdl.gui.multiworldSelect.newName")) {
 			public @Override void performAction() {
 				showNewWorldTextBox = true;
 			}
@@ -313,12 +312,12 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 
 		this.newNameField = this.addTextField(new WDLTextField(this.font,
 				this.width / 2 - 155, 29, 150, 20,
-				new TranslationTextComponent("wdl.gui.multiworldSelect.newName")));
+				new TranslatableComponent("wdl.gui.multiworldSelect.newName")));
 
 		this.searchField = this.addTextField(new WDLTextField(this.font,
 				this.width / 2 + 5, 29, 150, 20,
-				new TranslationTextComponent("wdl.gui.multiworldSelect.search")));
-		this.searchField.setText(searchText);
+				new TranslatableComponent("wdl.gui.multiworldSelect.search")));
+		this.searchField.setValue(searchText);
 	}
 
 	@Override
@@ -330,12 +329,12 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 	@Override
 	public void charTyped(char keyChar) {
 		if (this.newNameField.isFocused() && keyChar == '\n') {
-			String newName = this.newNameField.getText();
+			String newName = this.newNameField.getValue();
 
 			if (newName != null && !newName.isEmpty()) {
 				//TODO: Ensure that the new world is in view.
 				this.addMultiworld(newName);
-				this.newNameField.setText("");
+				this.newNameField.setValue("");
 				this.showNewWorldTextBox = false;
 			}
 		}
@@ -344,7 +343,7 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 	@Override
 	public void anyKeyPressed() {
 		if (this.searchField.isFocused()) {
-			this.searchText = searchField.getText();
+			this.searchText = searchField.getValue();
 			rebuildFilteredWorlds();
 		}
 	}
@@ -372,7 +371,7 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 		this.drawBorder(53, 53, 0, 0, height, width);
 
 		this.drawCenteredString(this.font,
-				I18n.format("wdl.gui.multiworldSelect.subtitle"),
+				I18n.get("wdl.gui.multiworldSelect.subtitle"),
 				this.width / 2, 18, 0xFF0000);
 
 		newWorldButton.visible = !showNewWorldTextBox;
@@ -381,9 +380,9 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 		super.render(mouseX, mouseY, partialTicks);
 
 		//Hint as to what the text box does
-		if (this.searchField.getText().isEmpty() && !this.searchField.isFocused()) {
+		if (this.searchField.getValue().isEmpty() && !this.searchField.isFocused()) {
 			drawString(font,
-					I18n.format("wdl.gui.multiworldSelect.search"),
+					I18n.get("wdl.gui.multiworldSelect.search"),
 					searchField.x + 4, searchField.y + 6,
 					0x909090);
 		}
@@ -444,9 +443,9 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 				+ selectedMultiWorld.displayName;
 		List<String> description = selectedMultiWorld.getDescription();
 
-		int maxWidth = font.getStringWidth(title);
+		int maxWidth = font.width(title);
 		for (String line : description) {
-			int width = font.getStringWidth(line);
+			int width = font.width(line);
 			if (width > maxWidth) {
 				maxWidth = width;
 			}
@@ -456,10 +455,10 @@ public class GuiWDLMultiworldSelect extends GuiTurningCameraBase {
 
 		drawString(font, title, 5, 64, 0xFFFFFF);
 
-		int y = 64 + font.FONT_HEIGHT;
+		int y = 64 + font.lineHeight;
 		for (String s : description) {
 			drawString(font, s, 5, y, 0xFFFFFF);
-			y += font.FONT_HEIGHT;
+			y += font.lineHeight;
 		}
 	}
 }

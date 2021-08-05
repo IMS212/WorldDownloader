@@ -18,7 +18,7 @@ dependencies {
 	//to change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	//mappings files('libs/yarn-1.14.4+build.12+mcp.jar')
-	mappings "de.oceanlabs.mcp:mcp_snapshot:20201028-1.16.3"
+	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.

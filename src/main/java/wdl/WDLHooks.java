@@ -17,21 +17,20 @@ import java.util.Collection;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
-
+import net.minecraft.CrashReport;
+import net.minecraft.CrashReportCategory;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.IngameMenuScreen;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.network.play.ClientPlayNetHandler;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.crash.CrashReport;
-import net.minecraft.crash.CrashReportCategory;
-import net.minecraft.network.play.server.SBlockActionPacket;
-import net.minecraft.network.play.server.SChatPacket;
-import net.minecraft.network.play.server.SCustomPayloadPlayPacket;
-import net.minecraft.network.play.server.SMapDataPacket;
-import net.minecraft.network.play.server.SUnloadChunkPacket;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockEventPacket;
+import net.minecraft.network.protocol.game.ClientboundChatPacket;
+import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket;
+import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket;
 
 /**
  * The various hooks for wdl. <br/>
@@ -48,17 +47,17 @@ public final class WDLHooks {
 	static IHooksListener listener = new BootstrapHooksListener();
 
 	public static interface IHooksListener {
-		void onWorldClientTick(ClientWorld sender);
-		void onWorldClientRemoveEntityFromWorld(ClientWorld sender, int eid);
-		void onNHPCHandleChunkUnload(ClientPlayNetHandler sender, ClientWorld world, SUnloadChunkPacket packet);
-		void onNHPCHandleChat(ClientPlayNetHandler sender, SChatPacket packet);
-		void onNHPCHandleMaps(ClientPlayNetHandler sender, SMapDataPacket packet);
-		void onNHPCHandleCustomPayload(ClientPlayNetHandler sender, SCustomPayloadPlayPacket packet);
-		void onNHPCHandleBlockAction(ClientPlayNetHandler sender, SBlockActionPacket packet);
-		void onNHPCDisconnect(ClientPlayNetHandler sender, ITextComponent reason);
+		void onWorldClientTick(ClientLevel sender);
+		void onWorldClientRemoveEntityFromWorld(ClientLevel sender, int eid);
+		void onNHPCHandleChunkUnload(ClientPacketListener sender, ClientLevel world, ClientboundForgetLevelChunkPacket packet);
+		void onNHPCHandleChat(ClientPacketListener sender, ClientboundChatPacket packet);
+		void onNHPCHandleMaps(ClientPacketListener sender, ClientboundMapItemDataPacket packet);
+		void onNHPCHandleCustomPayload(ClientPacketListener sender, ClientboundCustomPayloadPacket packet);
+		void onNHPCHandleBlockAction(ClientPacketListener sender, ClientboundBlockEventPacket packet);
+		void onNHPCDisconnect(ClientPacketListener sender, Component reason);
 		void onCrashReportPopulateEnvironment(CrashReport report);
-		void injectWDLButtons(IngameMenuScreen gui, Collection<Widget> buttonList, Consumer<Widget> addButton);
-		void handleWDLButtonClick(IngameMenuScreen gui, Button button);
+		void injectWDLButtons(PauseScreen gui, Collection<AbstractWidget> buttonList, Consumer<AbstractWidget> addButton);
+		void handleWDLButtonClick(PauseScreen gui, Button button);
 	}
 
 	private static class BootstrapHooksListener implements IHooksListener {
@@ -72,61 +71,61 @@ public final class WDLHooks {
 		}
 
 		@Override
-		public void onWorldClientTick(ClientWorld sender) {
+		public void onWorldClientTick(ClientLevel sender) {
 			bootstrap();
 			listener.onWorldClientTick(sender);
 		}
 
 		@Override
-		public void onWorldClientRemoveEntityFromWorld(ClientWorld sender, int eid) {
+		public void onWorldClientRemoveEntityFromWorld(ClientLevel sender, int eid) {
 			bootstrap();
 			listener.onWorldClientRemoveEntityFromWorld(sender, eid);
 		}
 
 		@Override
-		public void onNHPCHandleChunkUnload(ClientPlayNetHandler sender, ClientWorld world, SUnloadChunkPacket packet) {
+		public void onNHPCHandleChunkUnload(ClientPacketListener sender, ClientLevel world, ClientboundForgetLevelChunkPacket packet) {
 			bootstrap();
 			listener.onNHPCHandleChunkUnload(sender, world, packet);
 		}
 
 		@Override
-		public void onNHPCHandleChat(ClientPlayNetHandler sender, SChatPacket packet) {
+		public void onNHPCHandleChat(ClientPacketListener sender, ClientboundChatPacket packet) {
 			bootstrap();
 			listener.onNHPCHandleChat(sender, packet);
 		}
 
 		@Override
-		public void onNHPCHandleMaps(ClientPlayNetHandler sender, SMapDataPacket packet) {
+		public void onNHPCHandleMaps(ClientPacketListener sender, ClientboundMapItemDataPacket packet) {
 			bootstrap();
 			listener.onNHPCHandleMaps(sender, packet);
 		}
 
 		@Override
-		public void onNHPCHandleCustomPayload(ClientPlayNetHandler sender, SCustomPayloadPlayPacket packet) {
+		public void onNHPCHandleCustomPayload(ClientPacketListener sender, ClientboundCustomPayloadPacket packet) {
 			bootstrap();
 			listener.onNHPCHandleCustomPayload(sender, packet);
 		}
 
 		@Override
-		public void onNHPCHandleBlockAction(ClientPlayNetHandler sender, SBlockActionPacket packet) {
+		public void onNHPCHandleBlockAction(ClientPacketListener sender, ClientboundBlockEventPacket packet) {
 			bootstrap();
 			listener.onNHPCHandleBlockAction(sender, packet);
 		}
 
 		@Override
-		public void onNHPCDisconnect(ClientPlayNetHandler sender, ITextComponent reason) {
+		public void onNHPCDisconnect(ClientPacketListener sender, Component reason) {
 			bootstrap();
 			listener.onNHPCDisconnect(sender, reason);
 		}
 
 		@Override
-		public void injectWDLButtons(IngameMenuScreen gui, Collection<Widget> buttonList, Consumer<Widget> addButton) {
+		public void injectWDLButtons(PauseScreen gui, Collection<AbstractWidget> buttonList, Consumer<AbstractWidget> addButton) {
 			bootstrap();
 			listener.injectWDLButtons(gui, buttonList, addButton);
 		}
 
 		@Override
-		public void handleWDLButtonClick(IngameMenuScreen gui, Button button) {
+		public void handleWDLButtonClick(PauseScreen gui, Button button) {
 			bootstrap();
 			listener.handleWDLButtonClick(gui, button);
 		}
@@ -143,106 +142,106 @@ public final class WDLHooks {
 				// Ignore
 				stSize = 0;
 			}
-			CrashReportCategory cat = report.makeCategoryDepth("World Downloader Mod - not bootstrapped yet", stSize);
-			cat.addDetail("WDL version", VersionConstants::getModVersion);
-			cat.addDetail("Targeted MC version", VersionConstants::getExpectedVersion);
-			cat.addDetail("Actual MC version", VersionConstants::getMinecraftVersion);
+			CrashReportCategory cat = report.addCategory("World Downloader Mod - not bootstrapped yet", stSize);
+			cat.setDetail("WDL version", VersionConstants::getModVersion);
+			cat.setDetail("Targeted MC version", VersionConstants::getExpectedVersion);
+			cat.setDetail("Actual MC version", VersionConstants::getMinecraftVersion);
 		}
 	}
 
 	/**
-	 * Called when {@link ClientWorld#tick()} is called.
+	 * Called when {@link ClientLevel#tick()} is called.
 	 * <br/>
 	 * Should be at end of the method.
 	 */
-	public static void onWorldClientTick(ClientWorld sender) {
+	public static void onWorldClientTick(ClientLevel sender) {
 		listener.onWorldClientTick(sender);
 	}
 
 	/**
-	 * Called when {@link ClientWorld#removeEntityFromWorld(int)} is called.
+	 * Called when {@link ClientLevel#removeEntity(int)} is called.
 	 * <br/>
 	 * Should be at the start of the method.
 	 *
 	 * @param eid
 	 *            The entity's unique ID.
 	 */
-	public static void onWorldClientRemoveEntityFromWorld(ClientWorld sender,
+	public static void onWorldClientRemoveEntityFromWorld(ClientLevel sender,
 			int eid) {
 		listener.onWorldClientRemoveEntityFromWorld(sender, eid);
 	}
 
 	/**
-	 * Called when {@link ClientPlayNetHandler#processChunkUnload(SUnloadChunkPacket)} is called.
+	 * Called when {@link ClientPacketListener#handleForgetLevelChunk(ClientboundForgetLevelChunkPacket)} is called.
 	 * <br/>
 	 * Should be at the start of the method.
 	 */
-	public static void onNHPCHandleChunkUnload(ClientPlayNetHandler sender,
-			ClientWorld world, SUnloadChunkPacket packet) {
+	public static void onNHPCHandleChunkUnload(ClientPacketListener sender,
+			ClientLevel world, ClientboundForgetLevelChunkPacket packet) {
 		listener.onNHPCHandleChunkUnload(sender, world, packet);
 	}
 
 	/**
-	 * Called when {@link ClientPlayNetHandler#handleChat(SChatPacket)} is
+	 * Called when {@link ClientPacketListener#handleChat(ClientboundChatPacket)} is
 	 * called.
 	 * <br/>
 	 * Should be at the end of the method.
 	 */
-	public static void onNHPCHandleChat(ClientPlayNetHandler sender,
-			SChatPacket packet) {
+	public static void onNHPCHandleChat(ClientPacketListener sender,
+			ClientboundChatPacket packet) {
 		listener.onNHPCHandleChat(sender, packet);
 	}
 
 	/**
-	 * Called when {@link ClientPlayNetHandler#handleMaps(SMapDataPacket)} is
+	 * Called when {@link ClientPacketListener#handleMapItemData(ClientboundMapItemDataPacket)} is
 	 * called.
 	 * <br/>
 	 * Should be at the end of the method.
 	 */
-	public static void onNHPCHandleMaps(ClientPlayNetHandler sender,
-			SMapDataPacket packet) {
+	public static void onNHPCHandleMaps(ClientPacketListener sender,
+			ClientboundMapItemDataPacket packet) {
 		listener.onNHPCHandleMaps(sender, packet);
 	}
 
 	/**
 	 * Called when
-	 * {@link ClientPlayNetHandler#handleCustomPayload(SCustomPayloadPlayPacket)}
+	 * {@link ClientPacketListener#handleCustomPayload(ClientboundCustomPayloadPacket)}
 	 * is called.
 	 * <br/>
 	 * Should be at the end of the method.
 	 */
-	public static void onNHPCHandleCustomPayload(ClientPlayNetHandler sender,
-			SCustomPayloadPlayPacket packet) {
+	public static void onNHPCHandleCustomPayload(ClientPacketListener sender,
+			ClientboundCustomPayloadPacket packet) {
 		listener.onNHPCHandleCustomPayload(sender, packet);
 	}
 
 	/**
 	 * Called when
-	 * {@link ClientPlayNetHandler#handleBlockAction(SBlockActionPacket)} is
+	 * {@link ClientPacketListener#handleBlockEvent(ClientboundBlockEventPacket)} is
 	 * called.
 	 * <br/>
 	 * Should be at the end of the method.
 	 */
-	public static void onNHPCHandleBlockAction(ClientPlayNetHandler sender,
-			SBlockActionPacket packet) {
+	public static void onNHPCHandleBlockAction(ClientPacketListener sender,
+			ClientboundBlockEventPacket packet) {
 		listener.onNHPCHandleBlockAction(sender, packet);
 	}
 
 	/**
-	 * Called when {@link ClientPlayNetHandler#onDisconnect(ITextComponent)} is called.
+	 * Called when {@link ClientPacketListener#onDisconnect(Component)} is called.
 	 * <br/>
 	 * Should be at the start of the method.
 	 *
 	 * @param reason The reason for the disconnect, as passed to onDisconnect.
 	 */
-	public static void onNHPCDisconnect(ClientPlayNetHandler sender, ITextComponent reason) {
+	public static void onNHPCDisconnect(ClientPacketListener sender, Component reason) {
 		listener.onNHPCDisconnect(sender, reason);
 	}
 
 	/**
 	 * Injects WDL information into a crash report.
 	 *
-	 * Called at the end of {@link CrashReport#populateEnvironment()}.
+	 * Called at the end of {@link CrashReport#initDetails()}.
 	 * @param report
 	 */
 	public static void onCrashReportPopulateEnvironment(CrashReport report) {
@@ -258,8 +257,8 @@ public final class WDLHooks {
 	 *                   modified directly.
 	 * @param addButton  Method to add a button to the GUI.
 	 */
-	public static void injectWDLButtons(IngameMenuScreen gui, Collection<Widget> buttonList,
-			Consumer<Widget> addButton) {
+	public static void injectWDLButtons(PauseScreen gui, Collection<AbstractWidget> buttonList,
+			Consumer<AbstractWidget> addButton) {
 		listener.injectWDLButtons(gui, buttonList, addButton);
 	}
 	/**
@@ -269,7 +268,7 @@ public final class WDLHooks {
 	 * @param gui    The GUI
 	 * @param button The button that was clicked.
 	 */
-	public static void handleWDLButtonClick(IngameMenuScreen gui, Button button) {
+	public static void handleWDLButtonClick(PauseScreen gui, Button button) {
 		listener.handleWDLButtonClick(gui, button);
 	}
 }

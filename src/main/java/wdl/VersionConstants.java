@@ -13,9 +13,9 @@
  */
 package wdl;
 
+import net.minecraft.SharedConstants;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.SharedConstants;
 
 /**
  * Contains constants that vary between versions of the mod.
@@ -28,7 +28,7 @@ public class VersionConstants {
      *         version number</a>, eg <samp>316</samp>.
      */
     public static int getProtocolVersion() {
-        return SharedConstants.getVersion().getProtocolVersion();
+        return SharedConstants.getCurrentVersion().getProtocolVersion();
     }
 
     /**
@@ -38,7 +38,7 @@ public class VersionConstants {
      * @return A version string, eg <samp>1.11</samp>.
      */
     public static String getMinecraftVersion() {
-        return SharedConstants.getVersion().getName();
+        return SharedConstants.getCurrentVersion().getName();
     }
 
     /**
@@ -70,7 +70,7 @@ public class VersionConstants {
     public static String getMinecraftVersionInfo() {
         String version = getMinecraftVersion();
         // Gets the launched version (appears in F3)
-        String launchedVersion = Minecraft.getInstance().getVersion();
+        String launchedVersion = Minecraft.getInstance().getLaunchedVersion();
         String brand = ClientBrandRetriever.getClientModName();
         String versionType = Minecraft.getInstance().getVersionType();
 

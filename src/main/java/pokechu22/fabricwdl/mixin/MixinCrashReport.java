@@ -15,8 +15,7 @@
 package pokechu22.fabricwdl.mixin;
 
 import java.io.PrintStream;
-
-import net.minecraft.crash.CrashReport;
+import net.minecraft.CrashReport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import wdl.WDLHooks;
@@ -29,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(CrashReport.class)
 public abstract class MixinCrashReport implements IBaseChangesApplied {
-  @Inject(method="populateEnvironment", at=@At("RETURN"))
+  @Inject(method="initDetails", at=@At("RETURN"))
   private void onCrashReportPopulateEnvironment(CallbackInfo ci) {
     try {
       wdl.WDLHooks.onCrashReportPopulateEnvironment((CrashReport)(Object)this);
@@ -37,7 +36,7 @@ public abstract class MixinCrashReport implements IBaseChangesApplied {
       try {
         final Logger LOGGER = LogManager.getLogger();
         LOGGER.fatal("World Downloader: Failed to add crash info", t);
-        ((CrashReport)(Object)this).getCategory().addDetail("World Downloader - Fatal error in crash handler (see log)", t);
+        ((CrashReport)(Object)this).getSystemDetails().setDetail("World Downloader - Fatal error in crash handler (see log)", t);
       } catch (Throwable t2) {
         System.err.println("WDL: Double failure adding info to crash report!");
         t.printStackTrace();

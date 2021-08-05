@@ -13,9 +13,9 @@
  */
 package wdl.handler;
 
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.Slot;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
 
 /**
  * Shared logic between both block and entity handlers.
@@ -31,17 +31,17 @@ public abstract class BaseHandler {
 	 * @param containerStartIndex
 	 *            The index in the container to start copying items from.
 	 */
-	protected static void saveContainerItems(Container container,
-			IInventory tileEntity, int containerStartIndex) {
-		int containerSize = container.inventorySlots.size();
-		int inventorySize = tileEntity.getSizeInventory();
+	protected static void saveContainerItems(AbstractContainerMenu container,
+			Container tileEntity, int containerStartIndex) {
+		int containerSize = container.slots.size();
+		int inventorySize = tileEntity.getContainerSize();
 		int containerIndex = containerStartIndex;
 		int inventoryIndex = 0;
 
 		while ((containerIndex < containerSize) && (inventoryIndex < inventorySize)) {
 			Slot slot = container.getSlot(containerIndex);
-			if (slot.getHasStack()) {
-				tileEntity.setInventorySlotContents(inventoryIndex, slot.getStack());
+			if (slot.hasItem()) {
+				tileEntity.setItem(inventoryIndex, slot.getItem());
 			}
 			inventoryIndex++;
 			containerIndex++;

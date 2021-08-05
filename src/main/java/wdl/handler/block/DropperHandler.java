@@ -16,34 +16,33 @@ package wdl.handler.block;
 import static wdl.versioned.VersionedFunctions.*;
 
 import java.util.function.BiConsumer;
-
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.DispenserContainer;
-import net.minecraft.tileentity.DropperTileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.DispenserMenu;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.DropperBlockEntity;
 import wdl.ReflectionUtils;
 import wdl.handler.HandlerException;
 
-public class DropperHandler extends BlockHandler<DropperTileEntity, DispenserContainer> {
+public class DropperHandler extends BlockHandler<DropperBlockEntity, DispenserMenu> {
 	public DropperHandler() {
-		super(DropperTileEntity.class, DispenserContainer.class, "container.dropper");
+		super(DropperBlockEntity.class, DispenserMenu.class, "container.dropper");
 	}
 
 	@Override
-	public ITextComponent handle(BlockPos clickedPos, DispenserContainer container,
-			DropperTileEntity blockEntity, IBlockReader world,
-			BiConsumer<BlockPos, DropperTileEntity> saveMethod) throws HandlerException {
-		IInventory dropperInventory = ReflectionUtils.findAndGetPrivateField(
-				container, IInventory.class);
+	public Component handle(BlockPos clickedPos, DispenserMenu container,
+			DropperBlockEntity blockEntity, BlockGetter world,
+			BiConsumer<BlockPos, DropperBlockEntity> saveMethod) throws HandlerException {
+		Container dropperInventory = ReflectionUtils.findAndGetPrivateField(
+				container, Container.class);
 		String title = getCustomDisplayName(dropperInventory);
 		saveContainerItems(container, blockEntity, 0);
 		saveMethod.accept(clickedPos, blockEntity);
 		if (title != null) {
 			blockEntity.setCustomName(customName(title));
 		}
-		return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.dropper");
+		return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.dropper");
 	}
 }

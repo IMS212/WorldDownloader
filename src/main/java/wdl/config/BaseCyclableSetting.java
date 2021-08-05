@@ -14,9 +14,8 @@
 package wdl.config;
 
 import java.util.function.Function;
-
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 /**
  * A cyclable setting is a setting that can be cycled via a button through a
@@ -58,12 +57,12 @@ public abstract class BaseCyclableSetting<T> extends BaseSetting<T> implements C
 	public abstract T cycle(T value);
 
 	@Override
-	public ITextComponent getDescription() {
-		return new TranslationTextComponent(key + ".description");
+	public Component getDescription() {
+		return new TranslatableComponent(key + ".description");
 	}
 
 	@Override
-	public ITextComponent getButtonText(T curValue) {
-		return new TranslationTextComponent(key + "." + serializeToString(curValue));
+	public Component getButtonText(T curValue) {
+		return new TranslatableComponent(key + "." + serializeToString(curValue));
 	}
 }

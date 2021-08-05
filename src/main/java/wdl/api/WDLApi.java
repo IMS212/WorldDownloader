@@ -19,12 +19,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
 
 /**
  * Tool to allow other mods to interact with WDL.
@@ -44,7 +42,7 @@ public class WDLApi {
 	 * @param pos The position to save at.
 	 * @param te The TileEntity to save.
 	 */
-	public static void saveTileEntity(BlockPos pos, TileEntity te) {
+	public static void saveTileEntity(BlockPos pos, BlockEntity te) {
 		checkState();
 		INSTANCE.saveTileEntity(pos, te);
 	}
@@ -279,8 +277,8 @@ public class WDLApi {
 	 * Delegates API logic.
 	 */
 	public static interface APIInstance {
-		/** @see {@link WDLApi#saveTileEntity(BlockPos, TileEntity)} */
-		abstract void saveTileEntity(BlockPos pos, TileEntity te);
+		/** @see {@link WDLApi#saveTileEntity(BlockPos, BlockEntity)} */
+		abstract void saveTileEntity(BlockPos pos, BlockEntity te);
 		/** @see {@link WDLApi#addWDLMod(String, String, IWDLMod)} */
 		abstract void addWDLMod(String id, String version, IWDLMod mod);
 		/** @see {@link WDLApi#getImplementingExtensions(Class)} */

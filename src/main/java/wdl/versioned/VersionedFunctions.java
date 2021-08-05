@@ -32,37 +32,37 @@ import com.google.common.collect.ImmutableList;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ContainerBlock;
-import net.minecraft.client.GameSettings;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.network.play.ClientPlayNetHandler;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.network.play.client.CCustomPayloadPacket;
-import net.minecraft.network.play.server.SChatPacket;
-import net.minecraft.network.play.server.SCustomPayloadPlayPacket;
-import net.minecraft.network.play.server.SMapDataPacket;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.storage.MapData;
+import net.minecraft.client.Options;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.protocol.game.ClientboundChatPacket;
+import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket;
+import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import wdl.config.settings.GeneratorSettings.Generator;
 import wdl.handler.block.BlockHandler;
 import wdl.handler.blockaction.BlockActionHandler;
@@ -84,7 +84,7 @@ public final class VersionedFunctions {
 	 *
 	 * @return the dimension wrapper
 	 */
-	public static IDimensionWrapper getDimension(World world) {
+	public static IDimensionWrapper getDimension(Level world) {
 		return HandlerFunctions.getDimension(world);
 	}
 
@@ -93,7 +93,7 @@ public final class VersionedFunctions {
 	 *
 	 * @return a boolean
 	 */
-	public static boolean hasSkyLight(World world) {
+	public static boolean hasSkyLight(Level world) {
 		return HandlerFunctions.hasSkyLight(world);
 	}
 
@@ -135,7 +135,7 @@ public final class VersionedFunctions {
 	 * @see wdl.WDLChunkLoader#shouldImportBlockEntity
 	 */
 	public static boolean shouldImportBlockEntity(String entityID, BlockPos pos,
-			Block block, CompoundNBT blockEntityNBT, Chunk chunk) {
+			Block block, CompoundTag blockEntityNBT, LevelChunk chunk) {
 		return HandlerFunctions.shouldImportBlockEntity(entityID, pos, block, blockEntityNBT, chunk);
 	}
 
@@ -148,7 +148,7 @@ public final class VersionedFunctions {
 	 * @return The block entity, or null if the creation function fails.
 	 */
 	@Nullable
-	public static TileEntity createNewBlockEntity(World world, ContainerBlock block, BlockState state) {
+	public static BlockEntity createNewBlockEntity(Level world, BaseEntityBlock block, BlockState state) {
 		return HandlerFunctions.createNewBlockEntity(world, block, state);
 	}
 
@@ -165,15 +165,15 @@ public final class VersionedFunctions {
 	}
 
 	/**
-	 * Writes additional player NBT not handled by {@link ClientPlayerEntity#writeAdditional}.
+	 * Writes additional player NBT not handled by {@link LocalPlayer#addAdditionalSaveData}.
 	 *
-	 * Ideally, this should handle everything done by {@link ServerPlayerEntity#writeAdditional}.
+	 * Ideally, this should handle everything done by {@link ServerPlayer#addAdditionalSaveData}.
 	 * Current implementations don't, though.  (TODO)
 	 *
 	 * @param player The player.
 	 * @param nbt The (partially already populated) nbt.
 	 */
-	public static void writeAdditionalPlayerData(ClientPlayerEntity player, CompoundNBT nbt) {
+	public static void writeAdditionalPlayerData(LocalPlayer player, CompoundTag nbt) {
 		HandlerFunctions.writeAdditionalPlayerData(player, nbt);
 	}
 
@@ -184,7 +184,7 @@ public final class VersionedFunctions {
 	 * @param playerNBT The player's NBT data.
 	 * @return The world info NBT data.
 	 */
-	public static CompoundNBT getWorldInfoNbt(ClientWorld world, CompoundNBT playerNBT) {
+	public static CompoundTag getWorldInfoNbt(ClientLevel world, CompoundTag playerNBT) {
 		return HandlerFunctions.getWorldInfoNbt(world, playerNBT);
 	}
 
@@ -246,7 +246,7 @@ public final class VersionedFunctions {
 	 * @param tag The tag to use
 	 * @return The string version.
 	 */
-	public static String nbtString(INBT tag) {
+	public static String nbtString(Tag tag) {
 		return NBTFunctions.nbtString(tag);
 	}
 
@@ -256,7 +256,7 @@ public final class VersionedFunctions {
 	 * @param values The varargs array of values.
 	 * @return A new list tag.
 	 */
-	public static ListNBT createFloatListTag(float... values) {
+	public static ListTag createFloatListTag(float... values) {
 		return NBTFunctions.createFloatListTag(values);
 	}
 
@@ -266,7 +266,7 @@ public final class VersionedFunctions {
 	 * @param values The varargs array of values.
 	 * @return A new list tag.
 	 */
-	public static ListNBT createDoubleListTag(double... values) {
+	public static ListTag createDoubleListTag(double... values) {
 		return NBTFunctions.createDoubleListTag(values);
 	}
 
@@ -276,7 +276,7 @@ public final class VersionedFunctions {
 	 * @param values The varargs array of values.
 	 * @return A new list tag.
 	 */
-	public static ListNBT createShortListTag(short... values) {
+	public static ListTag createShortListTag(short... values) {
 		return NBTFunctions.createShortListTag(values);
 	}
 
@@ -286,7 +286,7 @@ public final class VersionedFunctions {
 	 * @param value The string to use.
 	 * @return A new string tag.
 	 */
-	public static StringNBT createStringTag(String value) {
+	public static StringTag createStringTag(String value) {
 		return NBTFunctions.createStringTag(value);
 	}
 
@@ -312,7 +312,7 @@ public final class VersionedFunctions {
 	 * @param bytes The payload.
 	 * @return The new packet.
 	 */
-	public static CCustomPayloadPacket makePluginMessagePacket(@ChannelName String channel, byte[] bytes) {
+	public static ServerboundCustomPayloadPacket makePluginMessagePacket(@ChannelName String channel, byte[] bytes) {
 		return PacketFunctions.makePluginMessagePacket(channel, bytes);
 	}
 
@@ -322,7 +322,7 @@ public final class VersionedFunctions {
 	 * @param bytes The payload.
 	 * @return The new packet.
 	 */
-	public static SCustomPayloadPlayPacket makeServerPluginMessagePacket(@ChannelName String channel, byte[] bytes) {
+	public static ClientboundCustomPayloadPacket makeServerPluginMessagePacket(@ChannelName String channel, byte[] bytes) {
 		return PacketFunctions.makeServerPluginMessagePacket(channel, bytes);
 	}
 
@@ -331,7 +331,7 @@ public final class VersionedFunctions {
 	 * @param message The chat message
 	 * @return The new packet.
 	 */
-	public static SChatPacket makeChatPacket(String message) {
+	public static ClientboundChatPacket makeChatPacket(String message) {
 		return PacketFunctions.makeChatPacket(message);
 	}
 
@@ -343,7 +343,7 @@ public final class VersionedFunctions {
 	 * @return The map data, or null if the underlying function returns null.
 	 */
 	@Nullable
-	public static MapData getMapData(World world, SMapDataPacket mapPacket) {
+	public static MapItemSavedData getMapData(Level world, ClientboundMapItemDataPacket mapPacket) {
 		return MapFunctions.getMapData(world, mapPacket);
 	}
 
@@ -362,7 +362,7 @@ public final class VersionedFunctions {
 	/**
 	 * Returns true if the map has a null dimension.  This can happen in 1.13.1 and later.
 	 */
-	public static boolean isMapDimensionNull(MapData map) {
+	public static boolean isMapDimensionNull(MapItemSavedData map) {
 		// n.b. this could be written as return (Object)mapData.dimension == null
 		// but that's rather awkward and we already need versioned code for other reasons
 		// (And, if that's not extracted to its own method, it can create
@@ -372,10 +372,10 @@ public final class VersionedFunctions {
 
 	/**
 	 * Sets the map's dimension to the given dimension.  In some versions,
-	 * the {@link MapData#dimension} field is a byte, while in other ones it is
+	 * the {@link MapItemSavedData#dimension} field is a byte, while in other ones it is
 	 * a DimensionType (which might start out null).
 	 */
-	public static void setMapDimension(MapData map, IDimensionWrapper dim) {
+	public static void setMapDimension(MapItemSavedData map, IDimensionWrapper dim) {
 		MapFunctions.setMapDimension(map, dim);
 	}
 
@@ -465,7 +465,7 @@ public final class VersionedFunctions {
 	 *
 	 * @return The new GameRules object
 	 */
-	public static GameRules loadGameRules(CompoundNBT nbt) {
+	public static GameRules loadGameRules(CompoundTag nbt) {
 		return GameRuleFunctions.loadGameRules(nbt);
 	}
 
@@ -532,19 +532,19 @@ public final class VersionedFunctions {
 	 * @param generatorOptions Parameters for the generator
 	 * @param generatorVersion The generator's version (used for default_1_1)
 	 */
-	public static void writeGeneratorOptions(CompoundNBT worldInfoNBT, long randomSeed, boolean mapFeatures, String generatorName, String generatorOptions, int generatorVersion) {
+	public static void writeGeneratorOptions(CompoundTag worldInfoNBT, long randomSeed, boolean mapFeatures, String generatorName, String generatorOptions, int generatorVersion) {
 		GeneratorFunctions.writeGeneratorOptions(worldInfoNBT, randomSeed, mapFeatures, generatorName, generatorOptions, generatorVersion);
 	}
 
 	/**
-	 * Creates a new instance of {@link ClientPlayerEntity}.
+	 * Creates a new instance of {@link LocalPlayer}.
 	 *
 	 * @param minecraft The minecraft instance
 	 * @param world The world
 	 * @param nhpc The connection
 	 * @param base The original player to copy other data from
 	 */
-	public static ClientPlayerEntity makePlayer(Minecraft minecraft, World world, ClientPlayNetHandler nhpc, ClientPlayerEntity base) {
+	public static LocalPlayer makePlayer(Minecraft minecraft, Level world, ClientPacketListener nhpc, LocalPlayer base) {
 		return GuiFunctions.makePlayer(minecraft, world, nhpc, base);
 	}
 
@@ -554,7 +554,7 @@ public final class VersionedFunctions {
 	 * @param settings The GameSettings
 	 * @return An object of an unknown type.
 	 */
-	public static Object getPointOfView(GameSettings settings) {
+	public static Object getPointOfView(Options settings) {
 		return GuiFunctions.getPointOfView(settings);
 	}
 
@@ -563,7 +563,7 @@ public final class VersionedFunctions {
 	 *
 	 * @param settings The GameSettings
 	 */
-	public static void setFirstPersonPointOfView(GameSettings settings) {
+	public static void setFirstPersonPointOfView(Options settings) {
 		GuiFunctions.setFirstPersonPointOfView(settings);
 	}
 
@@ -573,7 +573,7 @@ public final class VersionedFunctions {
 	 * @param settings The GameSettings
 	 * @param value The object returned by an earlier call to {@link #getPointOfView}.
 	 */
-	public static void restorePointOfView(GameSettings settings, Object value) {
+	public static void restorePointOfView(Options settings, Object value) {
 		GuiFunctions.restorePointOfView(settings, value);
 	}
 
@@ -661,8 +661,8 @@ public final class VersionedFunctions {
 	 * @param cancel Text for the cancel button.
 	 * @return The new ConfirmScreen.
 	 */
-	public static ConfirmScreen createConfirmScreen(BooleanConsumer action, ITextComponent line1,
-			ITextComponent line2, ITextComponent confirm, ITextComponent cancel) {
+	public static ConfirmScreen createConfirmScreen(BooleanConsumer action, Component line1,
+			Component line2, Component confirm, Component cancel) {
 		return GuiFunctions.createConfirmScreen(action, line1, line2, confirm, cancel);
 	}
 

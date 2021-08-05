@@ -18,35 +18,34 @@ import static wdl.versioned.VersionedFunctions.*;
 import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.inventory.container.ChestContainer;
-import net.minecraft.tileentity.ChestTileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import wdl.handler.HandlerException;
 
 /**
  * Contains shared logic used by both chests and trapped chests.
  */
-public class BaseChestHandler<B extends ChestTileEntity> extends BaseLargeChestHandler<B> {
+public class BaseChestHandler<B extends ChestBlockEntity> extends BaseLargeChestHandler<B> {
 	public BaseChestHandler(Class<B> blockEntityClass, String... defaultNames) {
-		super(blockEntityClass, ChestContainer.class, defaultNames);
+		super(blockEntityClass, ChestMenu.class, defaultNames);
 	}
 
 	@Override
-	public ITextComponent handle(BlockPos clickedPos, ChestContainer container,
-			B blockEntity, IBlockReader world,
+	public Component handle(BlockPos clickedPos, ChestMenu container,
+			B blockEntity, BlockGetter world,
 			BiConsumer<BlockPos, B> saveMethod) throws HandlerException {
-		String title = getCustomDisplayName(container.getLowerChestInventory());
+		String title = getCustomDisplayName(container.getContainer());
 
-		if (container.inventorySlots.size() > 63) {
+		if (container.slots.size() > 63) {
 			saveDoubleChest(clickedPos, container, blockEntity, world, saveMethod, title);
-			return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.doubleChest");
+			return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.doubleChest");
 		} else {
 			saveSingleChest(clickedPos, container, blockEntity, world, saveMethod, title);
-			return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.singleChest");
+			return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.singleChest");
 		}
 	}
 	/**
@@ -60,8 +59,8 @@ public class BaseChestHandler<B extends ChestTileEntity> extends BaseLargeChestH
 	 * @param displayName The custom name of the chest, or <code>null</code> if none is set.
 	 * @throws HandlerException As per {@link #handle}
 	 */
-	private void saveSingleChest(BlockPos clickedPos, ChestContainer container,
-			B blockEntity, IBlockReader world,
+	private void saveSingleChest(BlockPos clickedPos, ChestMenu container,
+			B blockEntity, BlockGetter world,
 			BiConsumer<BlockPos, B> saveMethod,
 			@Nullable String displayName) throws HandlerException {
 		saveContainerItems(container, blockEntity, 0);

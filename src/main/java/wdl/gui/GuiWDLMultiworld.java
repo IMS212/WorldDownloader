@@ -14,10 +14,9 @@
 package wdl.gui;
 
 import java.util.List;
-
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.gui.widget.WDLButton;
 import wdl.gui.widget.WDLScreen;
 
@@ -50,13 +49,13 @@ public class GuiWDLMultiworld extends WDLScreen {
 	@Override
 	public void init() {
 		String multiworldMessage = I18n
-				.format("wdl.gui.multiworld.descirption.requiredWhen")
+				.get("wdl.gui.multiworld.descirption.requiredWhen")
 				+ "\n\n"
-				+ I18n.format("wdl.gui.multiworld.descirption.whatIs");
+				+ I18n.get("wdl.gui.multiworld.descirption.whatIs");
 
 		infoBoxWidth = 320;
 		infoBoxLines = wordWrap(multiworldMessage, infoBoxWidth - 20);
-		infoBoxHeight = (font.FONT_HEIGHT * (infoBoxLines.size() + 1)) + 40;
+		infoBoxHeight = (font.lineHeight * (infoBoxLines.size() + 1)) + 40;
 
 		infoBoxX = this.width / 2 - infoBoxWidth / 2;
 		infoBoxY = this.height / 2 - infoBoxHeight / 2;
@@ -70,14 +69,14 @@ public class GuiWDLMultiworld extends WDLScreen {
 		});
 
 		this.addButton(new WDLButton(this.width / 2 - 155,
-				this.height - 29, 150, 20, new TranslationTextComponent("gui.cancel")) {
+				this.height - 29, 150, 20, new TranslatableComponent("gui.cancel")) {
 			public @Override void performAction() {
 				callback.onCancel();
 			}
 		});
 
 		this.addButton(new WDLButton(this.width / 2 + 5,
-				this.height - 29, 150, 20, new TranslationTextComponent("gui.done")) {
+				this.height - 29, 150, 20, new TranslatableComponent("gui.done")) {
 			public @Override void performAction() {
 				callback.onSelect(enableMultiworld);
 			}
@@ -100,7 +99,7 @@ public class GuiWDLMultiworld extends WDLScreen {
 
 		for (String s : infoBoxLines) {
 			this.drawString(font, s, x, y, 0xFFFFFF);
-			y += font.FONT_HEIGHT;
+			y += font.lineHeight;
 		}
 
 		//Red box around "multiworld support" button.
@@ -130,8 +129,8 @@ public class GuiWDLMultiworld extends WDLScreen {
 	/**
 	 * Gets the text to display on the multiworld enabled button.
 	 */
-	private ITextComponent getMultiworldEnabledText() {
-		return new TranslationTextComponent("wdl.gui.multiworld." + enableMultiworld);
+	private Component getMultiworldEnabledText() {
+		return new TranslatableComponent("wdl.gui.multiworld." + enableMultiworld);
 	}
 
 	@Override

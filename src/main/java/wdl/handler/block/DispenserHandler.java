@@ -16,34 +16,33 @@ package wdl.handler.block;
 import static wdl.versioned.VersionedFunctions.*;
 
 import java.util.function.BiConsumer;
-
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.DispenserContainer;
-import net.minecraft.tileentity.DispenserTileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.DispenserMenu;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.DispenserBlockEntity;
 import wdl.ReflectionUtils;
 import wdl.handler.HandlerException;
 
-public class DispenserHandler extends BlockHandler<DispenserTileEntity, DispenserContainer> {
+public class DispenserHandler extends BlockHandler<DispenserBlockEntity, DispenserMenu> {
 	public DispenserHandler() {
-		super(DispenserTileEntity.class, DispenserContainer.class, "container.dispenser");
+		super(DispenserBlockEntity.class, DispenserMenu.class, "container.dispenser");
 	}
 
 	@Override
-	public ITextComponent handle(BlockPos clickedPos, DispenserContainer container,
-			DispenserTileEntity blockEntity, IBlockReader world,
-			BiConsumer<BlockPos, DispenserTileEntity> saveMethod) throws HandlerException {
-		IInventory dispenserInventory = ReflectionUtils.findAndGetPrivateField(
-				container, IInventory.class);
+	public Component handle(BlockPos clickedPos, DispenserMenu container,
+			DispenserBlockEntity blockEntity, BlockGetter world,
+			BiConsumer<BlockPos, DispenserBlockEntity> saveMethod) throws HandlerException {
+		Container dispenserInventory = ReflectionUtils.findAndGetPrivateField(
+				container, Container.class);
 		String title = getCustomDisplayName(dispenserInventory);
 		saveContainerItems(container, blockEntity, 0);
 		saveMethod.accept(clickedPos, blockEntity);
 		if (title != null) {
 			blockEntity.setCustomName(customName(title));
 		}
-		return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.dispenser");
+		return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.dispenser");
 	}
 }

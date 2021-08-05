@@ -17,11 +17,10 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.EntityUtils;
 import wdl.EntityUtils.SpigotEntityType;
 import wdl.WDL;
@@ -60,17 +59,17 @@ public class GuiWDLEntityRangePresets extends WDLScreen {
 
 		this.vanillaButton = this.addButton(new ButtonDisplayGui(
 				this.width / 2 - 100, y, 200, 20,
-				new TranslationTextComponent("wdl.gui.rangePresets.vanilla"),
+				new TranslatableComponent("wdl.gui.rangePresets.vanilla"),
 				makeYesNoGui("wdl.gui.rangePresets.vanilla.warning", ID_VANILLA)));
 		y += 22;
 		this.spigotButton = this.addButton(new ButtonDisplayGui(
 				this.width / 2 - 100, y, 200, 20,
-				new TranslationTextComponent("wdl.gui.rangePresets.spigot"),
+				new TranslatableComponent("wdl.gui.rangePresets.spigot"),
 				makeYesNoGui("wdl.gui.rangePresets.spigot.warning", ID_SPIGOT)));
 		y += 22;
 		this.serverButton = this.addButton(new ButtonDisplayGui(
 				this.width / 2 - 100, y, 200, 20,
-				new TranslationTextComponent("wdl.gui.rangePresets.server"),
+				new TranslatableComponent("wdl.gui.rangePresets.server"),
 				makeYesNoGui("wdl.gui.rangePresets.spigot.warning", ID_SERVER)));
 
 		serverButton.setEnabled(WDLPluginChannels.hasServerEntityRange());
@@ -79,12 +78,12 @@ public class GuiWDLEntityRangePresets extends WDLScreen {
 
 		this.cancelButton = this.addButton(new ButtonDisplayGui(
 				this.width / 2 - 100, this.height - 29, 200, 20,
-				new TranslationTextComponent("gui.cancel"), this.parent));
+				new TranslatableComponent("gui.cancel"), this.parent));
 	}
 
 	private Supplier<ConfirmScreen> makeYesNoGui(String message, int id) {
-		ITextComponent upper = new TranslationTextComponent("wdl.gui.rangePresets.upperWarning");
-		ITextComponent lower = new TranslationTextComponent(message);
+		Component upper = new TranslatableComponent("wdl.gui.rangePresets.upperWarning");
+		Component lower = new TranslatableComponent(message);
 
 		return () -> new ConfirmScreen(result -> this.confirmResult(result, id), upper, lower);
 	}
@@ -93,25 +92,25 @@ public class GuiWDLEntityRangePresets extends WDLScreen {
 	public void render(int mouseX, int mouseY, float partialTicks) {
 		this.drawListBackground(23, 32, 0, 0, height, width);
 
-		ITextComponent infoText = null;
+		Component infoText = null;
 
 		if (vanillaButton.isHovered()) {
-			infoText = new TranslationTextComponent("wdl.gui.rangePresets.vanilla.description");
+			infoText = new TranslatableComponent("wdl.gui.rangePresets.vanilla.description");
 		} else if (spigotButton.isHovered()) {
-			infoText = new TranslationTextComponent("wdl.gui.rangePresets.spigot.description");
+			infoText = new TranslatableComponent("wdl.gui.rangePresets.spigot.description");
 		} else if (serverButton.isHovered()) {
 			// Laid out awkwardly due to 1.16's IFormattableTextComponent
-			TranslationTextComponent desc = new TranslationTextComponent("wdl.gui.rangePresets.server.description");
+			TranslatableComponent desc = new TranslatableComponent("wdl.gui.rangePresets.server.description");
 
 			if (serverButton.isEnabled()) {
-				infoText = desc.appendString("\n\n").append(
-						new TranslationTextComponent("wdl.gui.rangePresets.server.installed"));
+				infoText = desc.append("\n\n").append(
+						new TranslatableComponent("wdl.gui.rangePresets.server.installed"));
 			} else {
-				infoText = desc.appendString("\n\n").append(
-						new TranslationTextComponent("wdl.gui.rangePresets.server.notInstalled"));
+				infoText = desc.append("\n\n").append(
+						new TranslatableComponent("wdl.gui.rangePresets.server.notInstalled"));
 			}
 		} else if (cancelButton.isHovered()) {
-			infoText = new TranslationTextComponent("wdl.gui.rangePresets.cancel.description");
+			infoText = new TranslatableComponent("wdl.gui.rangePresets.cancel.description");
 		}
 
 		if (infoText != null) {
@@ -145,7 +144,7 @@ public class GuiWDLEntityRangePresets extends WDLScreen {
 			}
 		}
 
-		minecraft.displayGuiScreen(parent);
+		minecraft.setScreen(parent);
 	}
 
 

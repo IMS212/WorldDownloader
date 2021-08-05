@@ -17,13 +17,11 @@ import java.io.File;
 import java.util.List;
 
 import javax.annotation.Nullable;
-
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import com.google.common.io.Files;
-
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import wdl.WDL;
 import wdl.WorldBackup;
 import wdl.WorldBackup.ICustomBackupProgressMonitor;
@@ -45,7 +43,7 @@ public class GuiWDLBackup extends WDLScreen {
 	private final WDL wdl;
 	private final IConfiguration config;
 
-	private final ITextComponent description;
+	private final Component description;
 
 	private WorldBackupType backupType;
 	private WDLButton backupTypeButton;
@@ -69,9 +67,9 @@ public class GuiWDLBackup extends WDLScreen {
 		this.customBackupCommandTemplate = config.getValue(MiscSettings.BACKUP_COMMAND_TEMPLATE);
 		this.customBackupExtension = config.getValue(MiscSettings.BACKUP_EXTENSION);
 
-		this.description = new TranslationTextComponent("wdl.gui.backup.description1").appendString("\n\n")
-				.append(new TranslationTextComponent("wdl.gui.backup.description2")).appendString("\n\n")
-				.append(new TranslationTextComponent("wdl.gui.backup.description3"));
+		this.description = new TranslatableComponent("wdl.gui.backup.description1").append("\n\n")
+				.append(new TranslatableComponent("wdl.gui.backup.description2")).append("\n\n")
+				.append(new TranslatableComponent("wdl.gui.backup.description3"));
 	}
 
 	@Override
@@ -93,13 +91,13 @@ public class GuiWDLBackup extends WDLScreen {
 
 		customBackupCommandTemplateFld = this.addTextField(new WDLTextField(font,
 				width / 2 - 100, 54, 200, 20,
-				new TranslationTextComponent("wdl.gui.backup.customCommandTemplate")));
-		customBackupCommandTemplateFld.setMaxStringLength(255);
-		customBackupCommandTemplateFld.setText(this.customBackupCommandTemplate);
+				new TranslatableComponent("wdl.gui.backup.customCommandTemplate")));
+		customBackupCommandTemplateFld.setMaxLength(255);
+		customBackupCommandTemplateFld.setValue(this.customBackupCommandTemplate);
 		customBackupExtensionFld = this.addTextField(new WDLTextField(font,
 				width / 2 + 160, 54, 40, 20,
-				new TranslationTextComponent("wdl.gui.backup.customExtension")));
-		customBackupExtensionFld.setText(this.customBackupExtension);
+				new TranslatableComponent("wdl.gui.backup.customExtension")));
+		customBackupExtensionFld.setValue(this.customBackupExtension);
 
 		updateFieldVisibility();
 
@@ -107,8 +105,8 @@ public class GuiWDLBackup extends WDLScreen {
 				200, 20, this::getParentOrWarning));
 	}
 
-	private ITextComponent getBackupButtonText() {
-		return new TranslationTextComponent("wdl.gui.backup.backupMode",
+	private Component getBackupButtonText() {
+		return new TranslatableComponent("wdl.gui.backup.backupMode",
 				backupType.getDescription());
 	}
 
@@ -128,10 +126,10 @@ public class GuiWDLBackup extends WDLScreen {
 
 	@Override
 	public void anyKeyPressed() {
-		if (customBackupCommandTemplateFld.getVisible() &&
+		if (customBackupCommandTemplateFld.isVisible() &&
 				(customBackupCommandTemplateFld.isFocused() || customBackupExtensionFld.isFocused())) {
-			String newTemplate = customBackupCommandTemplateFld.getText();
-			String newExt = customBackupExtensionFld.getText();
+			String newTemplate = customBackupCommandTemplateFld.getValue();
+			String newExt = customBackupExtensionFld.getValue();
 			if (checkValidTime != 0 || !newTemplate.equals(customBackupCommandTemplate) ||
 					!newExt.equals(customBackupExtension)) {
 				customBackupCommandTemplate = newTemplate;
@@ -202,7 +200,7 @@ public class GuiWDLBackup extends WDLScreen {
 				// True if too much time passed, the command changed, or the GUI was closed.
 				return customSettingsChanged() ||
 						System.currentTimeMillis() >= endTime ||
-						minecraft.currentScreen != GuiWDLBackup.this;
+						minecraft.screen != GuiWDLBackup.this;
 			}
 
 			private boolean customSettingsChanged() {
@@ -218,7 +216,7 @@ public class GuiWDLBackup extends WDLScreen {
 
 				try {
 					tempDir = Files.createTempDir();
-					File optionsTxt = new File(minecraft.gameDir, "options.txt"); // Should exist
+					File optionsTxt = new File(minecraft.gameDirectory, "options.txt"); // Should exist
 					tempOptions = new File(tempDir, "options.txt");
 					Files.copy(optionsTxt, tempOptions);
 					tempDest = File.createTempFile("wdlbackuptest", "." + customBackupExtension);
@@ -253,19 +251,19 @@ public class GuiWDLBackup extends WDLScreen {
 
 		super.render(mouseX, mouseY, partialTicks);
 
-		if (customBackupCommandTemplateFld.getVisible()) {
-			String text = I18n.format("wdl.gui.backup.customCommandTemplate");
-			int x = customBackupCommandTemplateFld.x - 3 - font.getStringWidth(text);
+		if (customBackupCommandTemplateFld.isVisible()) {
+			String text = I18n.get("wdl.gui.backup.customCommandTemplate");
+			int x = customBackupCommandTemplateFld.x - 3 - font.width(text);
 			int y = customBackupCommandTemplateFld.y + 6;
 			this.drawString(font, text, x, y, 0xFFFFFF);
 		}
-		if (customBackupExtensionFld.getVisible()) {
-			String text = I18n.format("wdl.gui.backup.customExtension");
-			int x = customBackupExtensionFld.x - 3 - font.getStringWidth(text);
+		if (customBackupExtensionFld.isVisible()) {
+			String text = I18n.get("wdl.gui.backup.customExtension");
+			int x = customBackupExtensionFld.x - 3 - font.width(text);
 			int y = customBackupExtensionFld.y + 6;
 			this.drawString(font, text, x, y, 0xFFFFFF);
-			if (customBackupExtensionFld.getText().equalsIgnoreCase("rar")) {
-				x = customBackupExtensionFld.x + customBackupExtensionFld.getAdjustedWidth() + 14;
+			if (customBackupExtensionFld.getValue().equalsIgnoreCase("rar")) {
+				x = customBackupExtensionFld.x + customBackupExtensionFld.getInnerWidth() + 14;
 				this.drawString(font, "ಠ_ಠ", x, y, 0xFF0000); // See some of my experiences with dealing with rar files.  Use a non-proprietary format, please, it's for your own good!
 			}
 		}
@@ -274,14 +272,14 @@ public class GuiWDLBackup extends WDLScreen {
 			int y = 80;
 			for (String line : lines) {
 				this.drawString(font, line, 50, y, 0xFF0000);
-				y += font.FONT_HEIGHT;
+				y += font.lineHeight;
 			}
 		}
 
 		if (customBackupCommandTemplateFld.isHovered()) {
-			this.drawGuiInfoBox(new TranslationTextComponent("wdl.gui.backup.customCommandTemplate.description"), width, height, 48);
+			this.drawGuiInfoBox(new TranslatableComponent("wdl.gui.backup.customCommandTemplate.description"), width, height, 48);
 		} else if (customBackupExtensionFld.isHovered()) {
-			this.drawGuiInfoBox(new TranslationTextComponent("wdl.gui.backup.customExtension.description"), width, height, 48);
+			this.drawGuiInfoBox(new TranslatableComponent("wdl.gui.backup.customExtension.description"), width, height, 48);
 		} else if (commandInvalidReason == null || backupTypeButton.isHovered()) {
 			// Only draw the large description if the command is valid (i.e. there isn't other text)
 			// or the mouse is directly over the backup type button (i.e. the info is useful)
@@ -296,13 +294,13 @@ public class GuiWDLBackup extends WDLScreen {
 		} else {
 			return VersionedFunctions.createConfirmScreen((result) -> {
 				if (result) {
-					minecraft.displayGuiScreen(parent);
+					minecraft.setScreen(parent);
 				} else {
-					minecraft.displayGuiScreen(GuiWDLBackup.this);
+					minecraft.setScreen(GuiWDLBackup.this);
 				}
-			}, new TranslationTextComponent("wdl.gui.backup.customCommandFailed.line1"),
-					new TranslationTextComponent("wdl.gui.backup.customCommandFailed.line2"),
-					new TranslationTextComponent("gui.yes"), new TranslationTextComponent("gui.cancel"));
+			}, new TranslatableComponent("wdl.gui.backup.customCommandFailed.line1"),
+					new TranslatableComponent("wdl.gui.backup.customCommandFailed.line2"),
+					new TranslatableComponent("gui.yes"), new TranslatableComponent("gui.cancel"));
 		}
 	}
 }

@@ -16,34 +16,33 @@ package wdl.handler.block;
 import static wdl.versioned.VersionedFunctions.*;
 
 import java.util.function.BiConsumer;
-
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.HopperContainer;
-import net.minecraft.tileentity.HopperTileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.HopperMenu;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import wdl.ReflectionUtils;
 import wdl.handler.HandlerException;
 
-public class HopperHandler extends BlockHandler<HopperTileEntity, HopperContainer> {
+public class HopperHandler extends BlockHandler<HopperBlockEntity, HopperMenu> {
 	public HopperHandler() {
-		super(HopperTileEntity.class, HopperContainer.class, "container.hopper");
+		super(HopperBlockEntity.class, HopperMenu.class, "container.hopper");
 	}
 
 	@Override
-	public ITextComponent handle(BlockPos clickedPos, HopperContainer container,
-			HopperTileEntity blockEntity, IBlockReader world,
-			BiConsumer<BlockPos, HopperTileEntity> saveMethod) throws HandlerException {
-		IInventory hopperInventory = ReflectionUtils.findAndGetPrivateField(
-				container, IInventory.class);
+	public Component handle(BlockPos clickedPos, HopperMenu container,
+			HopperBlockEntity blockEntity, BlockGetter world,
+			BiConsumer<BlockPos, HopperBlockEntity> saveMethod) throws HandlerException {
+		Container hopperInventory = ReflectionUtils.findAndGetPrivateField(
+				container, Container.class);
 		String title = getCustomDisplayName(hopperInventory);
 		saveContainerItems(container, blockEntity, 0);
 		saveMethod.accept(clickedPos, blockEntity);
 		if (title != null) {
 			blockEntity.setCustomName(customName(title));
 		}
-		return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.hopper");
+		return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.hopper");
 	}
 }

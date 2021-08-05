@@ -16,31 +16,30 @@ package wdl.handler.block;
 import static wdl.versioned.VersionedFunctions.*;
 
 import java.util.function.BiConsumer;
-
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.AbstractFurnaceContainer;
-import net.minecraft.tileentity.AbstractFurnaceTileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.AbstractFurnaceMenu;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import wdl.ReflectionUtils;
 import wdl.handler.HandlerException;
 
-public abstract class BaseFurnaceHandler<B extends AbstractFurnaceTileEntity, C extends AbstractFurnaceContainer> extends BlockHandler<B, C> {
+public abstract class BaseFurnaceHandler<B extends AbstractFurnaceBlockEntity, C extends AbstractFurnaceMenu> extends BlockHandler<B, C> {
 	protected BaseFurnaceHandler(Class<B> blockEntityClass, Class<C> containerClass, String defaultName) {
 		super(blockEntityClass, containerClass, defaultName);
 	}
 
 	@Override
-	public ITextComponent handle(BlockPos clickedPos, C container,
-			B blockEntity, IBlockReader world,
+	public Component handle(BlockPos clickedPos, C container,
+			B blockEntity, BlockGetter world,
 			BiConsumer<BlockPos, B> saveMethod) throws HandlerException {
-		IInventory furnaceInventory = ReflectionUtils.findAndGetPrivateField(
-				container, AbstractFurnaceContainer.class, IInventory.class);
+		Container furnaceInventory = ReflectionUtils.findAndGetPrivateField(
+				container, AbstractFurnaceMenu.class, Container.class);
 		String title = getCustomDisplayName(furnaceInventory);
 		saveContainerItems(container, blockEntity, 0);
-		saveInventoryFields(AbstractFurnaceContainer.class, container, AbstractFurnaceTileEntity.class, blockEntity);
+		saveInventoryFields(AbstractFurnaceMenu.class, container, AbstractFurnaceBlockEntity.class, blockEntity);
 		if (title != null) {
 			blockEntity.setCustomName(customName(title));
 		}
@@ -48,5 +47,5 @@ public abstract class BaseFurnaceHandler<B extends AbstractFurnaceTileEntity, C 
 		return getMessage();
 	}
 
-	protected abstract TranslationTextComponent getMessage();
+	protected abstract TranslatableComponent getMessage();
 }

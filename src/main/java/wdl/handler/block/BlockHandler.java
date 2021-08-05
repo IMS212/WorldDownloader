@@ -18,15 +18,14 @@ import java.util.function.BiConsumer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
-import net.minecraft.client.resources.I18n;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.IIntArray;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import wdl.ReflectionUtils;
 import wdl.ducks.INetworkNameable;
 import wdl.handler.BaseHandler;
@@ -39,7 +38,7 @@ import wdl.versioned.VersionedFunctions;
  * @param <B> The type of block entity to handle.
  * @param <C> The type of container associated with that block entity.
  */
-public abstract class BlockHandler<B extends TileEntity, C extends Container> extends BaseHandler {
+public abstract class BlockHandler<B extends BlockEntity, C extends AbstractContainerMenu> extends BaseHandler {
 	/**
 	 * Constructor.
 	 *
@@ -93,8 +92,8 @@ public abstract class BlockHandler<B extends TileEntity, C extends Container> ex
 	 * @throws ClassCastException
 	 *             If container or blockEntity are not instances of the handled class.
 	 */
-	public final ITextComponent handleCasting(BlockPos clickedPos, Container container,
-			TileEntity blockEntity, IBlockReader world,
+	public final Component handleCasting(BlockPos clickedPos, AbstractContainerMenu container,
+			BlockEntity blockEntity, BlockGetter world,
 			BiConsumer<BlockPos, B> saveMethod) throws HandlerException, ClassCastException {
 		B b = blockEntityClass.cast(blockEntity);
 		C c = containerClass.cast(container);
@@ -119,8 +118,8 @@ public abstract class BlockHandler<B extends TileEntity, C extends Container> ex
 	 * @throws HandlerException
 	 *             When something is handled wrong.
 	 */
-	public abstract ITextComponent handle(BlockPos clickedPos, C container,
-			B blockEntity, IBlockReader world,
+	public abstract Component handle(BlockPos clickedPos, C container,
+			B blockEntity, BlockGetter world,
 			BiConsumer<BlockPos, B> saveMethod) throws HandlerException;
 
 	/**
@@ -131,13 +130,13 @@ public abstract class BlockHandler<B extends TileEntity, C extends Container> ex
 	 * @param container The container to save from.
 	 * @param blockEntity The inventory to save to.
 	 */
-	protected static void saveInventoryFields(Container container,
-			TileEntity blockEntity) {
+	protected static void saveInventoryFields(AbstractContainerMenu container,
+			BlockEntity blockEntity) {
 		// IIntArray is a SUPER misleading name; it's what stores these inventory fields.
 		// Unfortuantely they're declared on a per-inventory level now.
-		IIntArray input = ReflectionUtils.findAndGetPrivateField(container, IIntArray.class);
-		IIntArray output = ReflectionUtils.findAndGetPrivateField(blockEntity, IIntArray.class);
-		for (int i = 0; i < input.size(); i++) {
+		ContainerData input = ReflectionUtils.findAndGetPrivateField(container, ContainerData.class);
+		ContainerData output = ReflectionUtils.findAndGetPrivateField(blockEntity, ContainerData.class);
+		for (int i = 0; i < input.getCount(); i++) {
 			output.set(i, input.get(i));
 		}
 	}
@@ -154,9 +153,9 @@ public abstract class BlockHandler<B extends TileEntity, C extends Container> ex
 			Class<B> blockEntityClass, B blockEntity) {
 		// IIntArray is a SUPER misleading name; it's what stores these inventory fields.
 		// Unfortuantely they're declared on a per-inventory level now.
-		IIntArray input = ReflectionUtils.findAndGetPrivateField(container, containerClass, IIntArray.class);
-		IIntArray output = ReflectionUtils.findAndGetPrivateField(blockEntity, blockEntityClass, IIntArray.class);
-		for (int i = 0; i < input.size(); i++) {
+		ContainerData input = ReflectionUtils.findAndGetPrivateField(container, containerClass, ContainerData.class);
+		ContainerData output = ReflectionUtils.findAndGetPrivateField(blockEntity, blockEntityClass, ContainerData.class);
+		for (int i = 0; i < input.getCount(); i++) {
 			output.set(i, input.get(i));
 		}
 	}
@@ -176,7 +175,7 @@ public abstract class BlockHandler<B extends TileEntity, C extends Container> ex
 	 * @return The actual name from the network, or null if no custom name was set.
 	 */
 	@Nullable
-	protected String getCustomDisplayName(IInventory inventory) {
+	protected String getCustomDisplayName(Container inventory) {
 		if (inventory instanceof INetworkNameable) {
 			return ((INetworkNameable) inventory).getCustomDisplayName();
 		}
@@ -184,7 +183,7 @@ public abstract class BlockHandler<B extends TileEntity, C extends Container> ex
 		// is the vanilla name
 		String name = null; //inventory.getDisplayName().getString();
 		for (String key : defaultNames) {
-			if (I18n.format(key).equals(name)) {
+			if (I18n.get(key).equals(name)) {
 				return null;
 			}
 		}
@@ -201,7 +200,7 @@ public abstract class BlockHandler<B extends TileEntity, C extends Container> ex
 	 */
 	@SuppressWarnings("unchecked")
 	@Nullable
-	public static <B extends TileEntity, C extends Container> BlockHandler<B, C> getHandler(Class<B> blockEntityClass, Class<C> containerClass) {
+	public static <B extends BlockEntity, C extends AbstractContainerMenu> BlockHandler<B, C> getHandler(Class<B> blockEntityClass, Class<C> containerClass) {
 		for (BlockHandler<?, ?> h : VersionedFunctions.BLOCK_HANDLERS) {
 			if (h.getBlockEntityClass().equals(blockEntityClass) &&
 					h.getContainerClass().equals(containerClass)) {

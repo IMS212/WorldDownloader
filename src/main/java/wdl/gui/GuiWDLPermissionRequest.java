@@ -16,10 +16,9 @@ package wdl.gui;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.WDL;
 import wdl.WDLPluginChannels;
 import wdl.gui.widget.ButtonDisplayGui;
@@ -51,7 +50,7 @@ public class GuiWDLPermissionRequest extends WDLScreen {
 	private WDLButton submitButton;
 
 	public GuiWDLPermissionRequest(@Nullable Screen parent, WDL wdl) {
-		super(new StringTextComponent("Permission request")); // XXX Untranslated
+		super(new TextComponent("Permission request")); // XXX Untranslated
 		this.parent = parent;
 		this.wdl = wdl;
 	}
@@ -77,14 +76,14 @@ public class GuiWDLPermissionRequest extends WDLScreen {
 		}
 
 		this.requestField = this.addTextField(new WDLTextField(font,
-				width / 2 - 155, 18, 150, 20, new StringTextComponent("Request")));
+				width / 2 - 155, 18, 150, 20, new TextComponent("Request")));
 
 		this.submitButton = this.addButton(new WDLButton(
 				width / 2 + 5, 18, 150, 20,
-				new StringTextComponent("Submit request")) {
+				new TextComponent("Submit request")) {
 			public @Override void performAction() {
 				WDLPluginChannels.sendRequests();
-				setMessage(new StringTextComponent("Submitted!"));
+				setMessage(new TextComponent("Submitted!"));
 			}
 		});
 		this.submitButton.setEnabled(!(WDLPluginChannels.getRequests().isEmpty()));
@@ -93,23 +92,23 @@ public class GuiWDLPermissionRequest extends WDLScreen {
 				200, 20, this.parent));
 
 		this.addButton(new ButtonDisplayGui(this.width / 2 - 155, 39, 100, 20,
-				new TranslationTextComponent("wdl.gui.permissions.current"),
+				new TranslatableComponent("wdl.gui.permissions.current"),
 				() -> new GuiWDLPermissions(this.parent, this.wdl)));
 		this.addButton(new WDLButton(this.width / 2 - 50, 39, 100, 20,
-				new TranslationTextComponent("wdl.gui.permissions.request")) {
+				new TranslatableComponent("wdl.gui.permissions.request")) {
 			public @Override void performAction() {
 				// Would open this GUI; do nothing.
 			}
 		});
 		this.addButton(new ButtonDisplayGui(this.width / 2 + 55, 39, 100, 20,
-				new TranslationTextComponent("wdl.gui.permissions.overrides"),
+				new TranslatableComponent("wdl.gui.permissions.overrides"),
 				() -> new GuiWDLChunkOverrides(this.parent, this.wdl)));
 	}
 
 	@Override
 	public void charTyped(char keyChar) {
 		if (requestField.isFocused()) {
-			String request = requestField.getText();
+			String request = requestField.getValue();
 			if (isValidRequest(request) && keyChar == '\n') {
 				String[] requestData = request.split("=", 2);
 				String key = requestData[0];
@@ -120,7 +119,7 @@ public class GuiWDLPermissionRequest extends WDLScreen {
 						+ value + "'.");
 				submitButton.setEnabled(true);
 
-				requestField.setText("");
+				requestField.setValue("");
 			}
 		}
 	}
@@ -128,7 +127,7 @@ public class GuiWDLPermissionRequest extends WDLScreen {
 	@Override
 	public void anyKeyPressed() {
 		if (requestField.isFocused()) {
-			String request = requestField.getText();
+			String request = requestField.getValue();
 			requestField.setTextColor(isValidRequest(request) ? 0x40E040 : 0xE04040);
 		}
 	}

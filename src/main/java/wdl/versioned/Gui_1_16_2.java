@@ -16,27 +16,26 @@ package wdl.versioned;
 import static org.lwjgl.opengl.GL11.*;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import net.minecraft.client.GameSettings;
+import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.network.play.ClientPlayNetHandler;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.settings.PointOfView;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.Util;
-import net.minecraft.util.text.Color;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.event.ClickEvent;
-import net.minecraft.util.text.event.ClickEvent.Action;
-import net.minecraft.world.World;
+import net.minecraft.client.Options;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.ClickEvent.Action;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.world.level.Level;
 
 /**
  * Versioned functions related to GUIs.
@@ -47,30 +46,30 @@ final class GuiFunctions {
 	/* (non-javadoc)
 	 * @see VersionedFunctions#makePlayer
 	 */
-	static ClientPlayerEntity makePlayer(Minecraft minecraft, World world, ClientPlayNetHandler nhpc, ClientPlayerEntity base) {
-		return new ClientPlayerEntity(minecraft, (ClientWorld)world, nhpc,
+	static LocalPlayer makePlayer(Minecraft minecraft, Level world, ClientPacketListener nhpc, LocalPlayer base) {
+		return new LocalPlayer(minecraft, (ClientLevel)world, nhpc,
 				base.getStats(), base.getRecipeBook(), false, false);
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#getPointOfView
 	 */
-	static Object getPointOfView(GameSettings settings) {
-		return settings.getPointOfView();
+	static Object getPointOfView(Options settings) {
+		return settings.getCameraType();
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#setFirstPersonPointOfView
 	 */
-	static void setFirstPersonPointOfView(GameSettings settings) {
-		settings.setPointOfView(PointOfView.FIRST_PERSON);
+	static void setFirstPersonPointOfView(Options settings) {
+		settings.setCameraType(CameraType.FIRST_PERSON);
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#restorePointOfView
 	 */
-	static void restorePointOfView(GameSettings settings, Object value) {
-		settings.setPointOfView((PointOfView)value);
+	static void restorePointOfView(Options settings, Object value) {
+		settings.setCameraType((CameraType)value);
 	}
 
 	/* (non-javadoc)
@@ -80,19 +79,19 @@ final class GuiFunctions {
 		RenderSystem.disableLighting();
 		RenderSystem.disableFog();
 
-		Tessellator t = Tessellator.getInstance();
-		BufferBuilder b = t.getBuffer();
+		Tesselator t = Tesselator.getInstance();
+		BufferBuilder b = t.getBuilder();
 
-		Minecraft.getInstance().getTextureManager().bindTexture(AbstractGui.BACKGROUND_LOCATION);
+		Minecraft.getInstance().getTextureManager().bind(GuiComponent.BACKGROUND_LOCATION);
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
 		float textureSize = 32.0F;
-		b.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
-		b.pos(0, bottom, 0).color(32, 32, 32, 255).tex(0 / textureSize, bottom / textureSize).endVertex();
-		b.pos(right, bottom, 0).color(32, 32, 32, 255).tex(right / textureSize, bottom / textureSize).endVertex();
-		b.pos(right, top, 0).color(32, 32, 32, 255).tex(right / textureSize, top / textureSize).endVertex();
-		b.pos(left, top, 0).color(32, 32, 32, 255).tex(left / textureSize, top / textureSize).endVertex();
-		t.draw();
+		b.begin(7, DefaultVertexFormat.POSITION_COLOR_TEX);
+		b.vertex(0, bottom, 0).color(32, 32, 32, 255).uv(0 / textureSize, bottom / textureSize).endVertex();
+		b.vertex(right, bottom, 0).color(32, 32, 32, 255).uv(right / textureSize, bottom / textureSize).endVertex();
+		b.vertex(right, top, 0).color(32, 32, 32, 255).uv(right / textureSize, top / textureSize).endVertex();
+		b.vertex(left, top, 0).color(32, 32, 32, 255).uv(left / textureSize, top / textureSize).endVertex();
+		t.end();
 	}
 
 	/* (non-javadoc)
@@ -104,38 +103,38 @@ final class GuiFunctions {
 		RenderSystem.disableDepthTest();
 		byte padding = 4;
 
-		Minecraft.getInstance().getTextureManager().bindTexture(AbstractGui.BACKGROUND_LOCATION);
+		Minecraft.getInstance().getTextureManager().bind(GuiComponent.BACKGROUND_LOCATION);
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
 		float textureSize = 32.0F;
 
-		Tessellator t = Tessellator.getInstance();
-		BufferBuilder b = t.getBuffer();
+		Tesselator t = Tesselator.getInstance();
+		BufferBuilder b = t.getBuilder();
 
 		// Box code is GuiSlot.overlayBackground
 		// Upper box
 		int upperBoxEnd = top + topMargin;
 
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		b.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
-		b.pos(left, upperBoxEnd, 0.0D).color(64, 64, 64, 255).tex(0, upperBoxEnd / textureSize).endVertex();
-		b.pos(right, upperBoxEnd, 0.0D).color(64, 64, 64, 255).tex(right / textureSize, upperBoxEnd / textureSize)
+		b.begin(7, DefaultVertexFormat.POSITION_COLOR_TEX);
+		b.vertex(left, upperBoxEnd, 0.0D).color(64, 64, 64, 255).uv(0, upperBoxEnd / textureSize).endVertex();
+		b.vertex(right, upperBoxEnd, 0.0D).color(64, 64, 64, 255).uv(right / textureSize, upperBoxEnd / textureSize)
 				.endVertex();
-		b.pos(right, top, 0.0D).color(64, 64, 64, 255).tex(right / textureSize, top / textureSize).endVertex();
-		b.pos(left, top, 0.0D).color(64, 64, 64, 255).tex(0, top / textureSize).endVertex();
-		t.draw();
+		b.vertex(right, top, 0.0D).color(64, 64, 64, 255).uv(right / textureSize, top / textureSize).endVertex();
+		b.vertex(left, top, 0.0D).color(64, 64, 64, 255).uv(0, top / textureSize).endVertex();
+		t.end();
 
 		// Lower box
 		int lowerBoxStart = bottom - bottomMargin;
 
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		b.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
-		b.pos(left, bottom, 0.0D).color(64, 64, 64, 255).tex(0, bottom / textureSize).endVertex();
-		b.pos(right, bottom, 0.0D).color(64, 64, 64, 255).tex(right / textureSize, bottom / textureSize).endVertex();
-		b.pos(right, lowerBoxStart, 0.0D).color(64, 64, 64, 255).tex(right / textureSize, lowerBoxStart / textureSize)
+		b.begin(7, DefaultVertexFormat.POSITION_COLOR_TEX);
+		b.vertex(left, bottom, 0.0D).color(64, 64, 64, 255).uv(0, bottom / textureSize).endVertex();
+		b.vertex(right, bottom, 0.0D).color(64, 64, 64, 255).uv(right / textureSize, bottom / textureSize).endVertex();
+		b.vertex(right, lowerBoxStart, 0.0D).color(64, 64, 64, 255).uv(right / textureSize, lowerBoxStart / textureSize)
 				.endVertex();
-		b.pos(left, lowerBoxStart, 0.0D).color(64, 64, 64, 255).tex(0, lowerBoxStart / textureSize).endVertex();
-		t.draw();
+		b.vertex(left, lowerBoxStart, 0.0D).color(64, 64, 64, 255).uv(0, lowerBoxStart / textureSize).endVertex();
+		t.end();
 
 		// Gradients
 		RenderSystem.enableBlend();
@@ -143,18 +142,18 @@ final class GuiFunctions {
 		RenderSystem.disableAlphaTest();
 		RenderSystem.shadeModel(GL_SMOOTH);
 		RenderSystem.disableTexture();
-		b.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
-		b.pos(left, upperBoxEnd + padding, 0.0D).color(0, 0, 0, 0).tex(0, 1).endVertex();
-		b.pos(right, upperBoxEnd + padding, 0.0D).color(0, 0, 0, 0).tex(1, 1).endVertex();
-		b.pos(right, upperBoxEnd, 0.0D).color(0, 0, 0, 255).tex(1, 0).endVertex();
-		b.pos(left, upperBoxEnd, 0.0D).color(0, 0, 0, 255).tex(0, 0).endVertex();
-		t.draw();
-		b.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
-		b.pos(left, lowerBoxStart, 0.0D).color(0, 0, 0, 255).tex(0, 1).endVertex();
-		b.pos(right, lowerBoxStart, 0.0D).color(0, 0, 0, 255).tex(1, 1).endVertex();
-		b.pos(right, lowerBoxStart - padding, 0.0D).color(0, 0, 0, 0).tex(1, 0).endVertex();
-		b.pos(left, lowerBoxStart - padding, 0.0D).color(0, 0, 0, 0).tex(0, 0).endVertex();
-		t.draw();
+		b.begin(7, DefaultVertexFormat.POSITION_COLOR_TEX);
+		b.vertex(left, upperBoxEnd + padding, 0.0D).color(0, 0, 0, 0).uv(0, 1).endVertex();
+		b.vertex(right, upperBoxEnd + padding, 0.0D).color(0, 0, 0, 0).uv(1, 1).endVertex();
+		b.vertex(right, upperBoxEnd, 0.0D).color(0, 0, 0, 255).uv(1, 0).endVertex();
+		b.vertex(left, upperBoxEnd, 0.0D).color(0, 0, 0, 255).uv(0, 0).endVertex();
+		t.end();
+		b.begin(7, DefaultVertexFormat.POSITION_COLOR_TEX);
+		b.vertex(left, lowerBoxStart, 0.0D).color(0, 0, 0, 255).uv(0, 1).endVertex();
+		b.vertex(right, lowerBoxStart, 0.0D).color(0, 0, 0, 255).uv(1, 1).endVertex();
+		b.vertex(right, lowerBoxStart - padding, 0.0D).color(0, 0, 0, 0).uv(1, 0).endVertex();
+		b.vertex(left, lowerBoxStart - padding, 0.0D).color(0, 0, 0, 0).uv(0, 0).endVertex();
+		t.end();
 
 		RenderSystem.enableTexture();
 		RenderSystem.shadeModel(GL_FLAT);
@@ -166,14 +165,14 @@ final class GuiFunctions {
 	 * @see VersionedFunctions#setClipboardString
 	 */
 	static void setClipboardString(String text) {
-		Minecraft.getInstance().keyboardListener.setClipboardString(text);
+		Minecraft.getInstance().keyboardHandler.setClipboard(text);
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#openLink
 	 */
 	static void openLink(String url) {
-		Util.getOSType().openURI(url);
+		Util.getPlatform().openUri(url);
 	}
 
 	/* (non-javadoc)
@@ -195,16 +194,16 @@ final class GuiFunctions {
 	 */
 	static Style createLinkFormatting(String url) {
 		return Style.EMPTY
-				.setColor(Color.fromTextFormatting(TextFormatting.BLUE))
-				.applyFormatting(TextFormatting.UNDERLINE)
-				.setClickEvent(new ClickEvent(Action.OPEN_URL, url));
+				.withColor(TextColor.fromLegacyFormat(ChatFormatting.BLUE))
+				.applyFormat(ChatFormatting.UNDERLINE)
+				.withClickEvent(new ClickEvent(Action.OPEN_URL, url));
 	}
 
 	/* (non-javadoc)
 	 * @See VersionedFunctions#createConfirmScreen
 	 */
-	static ConfirmScreen createConfirmScreen(BooleanConsumer action, ITextComponent line1,
-			ITextComponent line2, ITextComponent confirm, ITextComponent cancel) {
+	static ConfirmScreen createConfirmScreen(BooleanConsumer action, Component line1,
+			Component line2, Component confirm, Component cancel) {
 		return new ConfirmScreen(action, line1, line2, confirm, cancel);
 	}
 }

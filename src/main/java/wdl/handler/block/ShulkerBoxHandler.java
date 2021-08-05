@@ -16,34 +16,33 @@ package wdl.handler.block;
 import static wdl.versioned.VersionedFunctions.*;
 
 import java.util.function.BiConsumer;
-
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.ShulkerBoxContainer;
-import net.minecraft.tileentity.ShulkerBoxTileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.ShulkerBoxMenu;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
 import wdl.ReflectionUtils;
 import wdl.handler.HandlerException;
 
-public class ShulkerBoxHandler extends BlockHandler<ShulkerBoxTileEntity, ShulkerBoxContainer> {
+public class ShulkerBoxHandler extends BlockHandler<ShulkerBoxBlockEntity, ShulkerBoxMenu> {
 	public ShulkerBoxHandler() {
-		super(ShulkerBoxTileEntity.class, ShulkerBoxContainer.class, "container.shulkerBox");
+		super(ShulkerBoxBlockEntity.class, ShulkerBoxMenu.class, "container.shulkerBox");
 	}
 
 	@Override
-	public ITextComponent handle(BlockPos clickedPos, ShulkerBoxContainer container,
-			ShulkerBoxTileEntity blockEntity, IBlockReader world,
-			BiConsumer<BlockPos, ShulkerBoxTileEntity> saveMethod) throws HandlerException {
-		IInventory shulkerInventory = ReflectionUtils.findAndGetPrivateField(
-				container, IInventory.class);
+	public Component handle(BlockPos clickedPos, ShulkerBoxMenu container,
+			ShulkerBoxBlockEntity blockEntity, BlockGetter world,
+			BiConsumer<BlockPos, ShulkerBoxBlockEntity> saveMethod) throws HandlerException {
+		Container shulkerInventory = ReflectionUtils.findAndGetPrivateField(
+				container, Container.class);
 		String title = getCustomDisplayName(shulkerInventory);
 		saveContainerItems(container, blockEntity, 0);
 		if (title != null) {
 			blockEntity.setCustomName(customName(title));
 		}
 		saveMethod.accept(clickedPos, blockEntity);
-		return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.shulkerBox");
+		return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.shulkerBox");
 	}
 }

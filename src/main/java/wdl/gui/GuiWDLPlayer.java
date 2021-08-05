@@ -14,10 +14,9 @@
 package wdl.gui;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.WDL;
 import wdl.config.IConfiguration;
 import wdl.config.settings.PlayerSettings;
@@ -44,7 +43,7 @@ public class GuiWDLPlayer extends WDLScreen {
 	private int posTextY;
 
 	public GuiWDLPlayer(@Nullable Screen parent, WDL wdl) {
-		super(new TranslationTextComponent("wdl.gui.player.title", WDL.baseFolderName));
+		super(new TranslatableComponent("wdl.gui.player.title", WDL.baseFolderName));
 		this.parent = parent;
 		this.wdl = wdl;
 		this.config = wdl.worldProps;
@@ -73,23 +72,23 @@ public class GuiWDLPlayer extends WDLScreen {
 		this.posTextY = y + 4;
 		this.posX = this.addTextField(new GuiNumericTextField(this.font,
 				this.width / 2 - 87, y, 50, 16,
-				new TranslationTextComponent("wdl.gui.player.position.coord", "X")));
+				new TranslatableComponent("wdl.gui.player.position.coord", "X")));
 		this.posY = this.addTextField(new GuiNumericTextField(this.font,
 				this.width / 2 - 19, y, 50, 16,
-				new TranslationTextComponent("wdl.gui.player.position.coord", "Y")));
+				new TranslatableComponent("wdl.gui.player.position.coord", "Y")));
 		this.posZ = this.addTextField(new GuiNumericTextField(this.font,
 				this.width / 2 + 48, y, 50, 16,
-				new TranslationTextComponent("wdl.gui.player.position.coord", "Z")));
+				new TranslatableComponent("wdl.gui.player.position.coord", "Z")));
 		this.posX.setValue(config.getValue(PlayerSettings.PLAYER_X));
 		this.posY.setValue(config.getValue(PlayerSettings.PLAYER_Y));
 		this.posZ.setValue(config.getValue(PlayerSettings.PLAYER_Z));
-		this.posX.setMaxStringLength(7);
-		this.posY.setMaxStringLength(7);
-		this.posZ.setMaxStringLength(7);
+		this.posX.setMaxLength(7);
+		this.posY.setMaxLength(7);
+		this.posZ.setMaxLength(7);
 		y += 18;
 		this.pickPosBtn = this.addButton(new WDLButton(
 				this.width / 2 - 0, y, 100, 20,
-				new TranslationTextComponent("wdl.gui.player.setPositionToCurrentPosition")) {
+				new TranslatableComponent("wdl.gui.player.setPositionToCurrentPosition")) {
 			public @Override void performAction() {
 				setPlayerPosToPlayerPosition();
 			}
@@ -102,11 +101,11 @@ public class GuiWDLPlayer extends WDLScreen {
 	}
 
 	@Override
-	public void onClose() {
+	public void removed() {
 		if (this.showPosFields) {
-			this.config.setValue(PlayerSettings.PLAYER_X, posX.getValue());
-			this.config.setValue(PlayerSettings.PLAYER_Y, posY.getValue());
-			this.config.setValue(PlayerSettings.PLAYER_Z, posZ.getValue());
+			this.config.setValue(PlayerSettings.PLAYER_X, posX.getValue(0));
+			this.config.setValue(PlayerSettings.PLAYER_Y, posY.getValue(0));
+			this.config.setValue(PlayerSettings.PLAYER_Z, posZ.getValue(0));
 		}
 
 		wdl.saveProps();
@@ -119,7 +118,7 @@ public class GuiWDLPlayer extends WDLScreen {
 	public void render(int mouseX, int mouseY, float partialTicks) {
 		this.drawListBackground(23, 32, 0, 0, height, width);
 
-		ITextComponent tooltip = null;
+		Component tooltip = null;
 
 		if (this.showPosFields) {
 			this.drawString(this.font, "X:", this.width / 2 - 99,
@@ -130,15 +129,15 @@ public class GuiWDLPlayer extends WDLScreen {
 					this.posTextY, 0xFFFFFF);
 
 			if (posX.isHovered()) {
-				tooltip = new TranslationTextComponent("wdl.gui.player.positionTextBox.description", "X");
+				tooltip = new TranslatableComponent("wdl.gui.player.positionTextBox.description", "X");
 			} else if (posY.isHovered()) {
-				tooltip = new TranslationTextComponent("wdl.gui.player.positionTextBox.description", "Y");
+				tooltip = new TranslatableComponent("wdl.gui.player.positionTextBox.description", "Y");
 			} else if (posZ.isHovered()) {
-				tooltip = new TranslationTextComponent("wdl.gui.player.positionTextBox.description", "Z");
+				tooltip = new TranslatableComponent("wdl.gui.player.positionTextBox.description", "Z");
 			}
 
 			if (pickPosBtn.isHovered()) {
-				tooltip = new TranslationTextComponent("wdl.gui.player.setPositionToCurrentPosition.description");
+				tooltip = new TranslatableComponent("wdl.gui.player.setPositionToCurrentPosition.description");
 			}
 		}
 

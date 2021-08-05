@@ -13,17 +13,17 @@
  */
 package wdl.gui.widget;
 
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Component;
 
 /**
- * {@link GuiTextField} that only accepts numbers.
+ *  that only accepts numbers.
  */
 public class GuiNumericTextField extends WDLTextField {
-	public GuiNumericTextField(FontRenderer fontRenderer,
-			int x, int y, int width, int height, ITextComponent text) {
+	public GuiNumericTextField(Font fontRenderer,
+			int x, int y, int width, int height, Component text) {
 		super(fontRenderer, x, y, width, height, text);
-		setText("0");
+		setValue("0");
 	}
 
 	/**
@@ -35,10 +35,10 @@ public class GuiNumericTextField extends WDLTextField {
 	public void tick() {
 		// Save last safe text.
 		try {
-			Integer.parseInt("0" + getText());
-			lastSafeText = getText();
+			Integer.parseInt("0" + getValue());
+			lastSafeText = getValue();
 		} catch (NumberFormatException e) {
-			setText(lastSafeText);
+			setValue(lastSafeText);
 		}
 		super.tick();
 	}
@@ -47,9 +47,9 @@ public class GuiNumericTextField extends WDLTextField {
 	 * Gets the current value.
 	 * @return
 	 */
-	public int getValue() {
+	public int getValue(int a) {
 		try {
-			return Integer.parseInt("0" + getText());
+			return Integer.parseInt("0" + getValue());
 		} catch (NumberFormatException e) {
 			// Should not happen, hopefully.
 			e.printStackTrace();
@@ -65,24 +65,24 @@ public class GuiNumericTextField extends WDLTextField {
 	public void setValue(int value) {
 		String text = String.valueOf(value);
 		lastSafeText = text;
-		setText(text);
+		setValue(text);
 	}
 
 	@Override
-	public String getText() {
-		String text = super.getText();
+	public String getValue() {
+		String text = super.getValue();
 
 		try {
 			int value = Integer.parseInt("0" + text);
 			return String.valueOf(value);
 		} catch (NumberFormatException e) {
-			setText(lastSafeText);
+			setValue(lastSafeText);
 			return lastSafeText;
 		}
 	}
 
 	@Override
-	public void setText(String text) {
+	public void setValue(String text) {
 		String value;
 
 		try {
@@ -91,7 +91,7 @@ public class GuiNumericTextField extends WDLTextField {
 			value = lastSafeText;
 		}
 
-		super.setText(value);
+		super.setValue(value);
 		lastSafeText = value;
 	}
 }

@@ -13,7 +13,7 @@
  */
 package wdl.gui.widget;
 
-import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Font;
 import wdl.versioned.VersionedFunctions;
 
 /**
@@ -26,12 +26,12 @@ public class LinkEntry extends TextEntry {
 
 	private int x;
 
-	public LinkEntry(WDLScreen screen, FontRenderer font, String text, String link) {
+	public LinkEntry(WDLScreen screen, Font font, String text, String link) {
 		super(screen, font, text, 0x5555FF);
 
 		this.link = link;
-		this.textWidth = font.getStringWidth(text);
-		this.linkWidth = font.getStringWidth(link);
+		this.textWidth = font.width(text);
+		this.linkWidth = font.width(link);
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class LinkEntry extends TextEntry {
 				drawX = width + x - (4 + linkWidth);
 			}
 			screen.fill(drawX, mouseY - 2, drawX + linkWidth + 4,
-					mouseY + font.FONT_HEIGHT + 2, 0x80000000);
+					mouseY + font.lineHeight + 2, 0x80000000);
 
 			screen.drawString(font, link, drawX + 2, mouseY, 0xFFFFFF);
 		}

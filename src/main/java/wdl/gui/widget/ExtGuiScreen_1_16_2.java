@@ -13,32 +13,29 @@
  */
 package wdl.gui.widget;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
-
-import net.minecraft.client.gui.AbstractGui;
 import org.lwjgl.glfw.GLFW;
-
-import com.mojang.blaze3d.matrix.MatrixStack;
-
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.util.text.CharacterManager;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.ITextProperties;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.Style;
+import net.minecraft.client.StringSplitter;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextComponent;
 import wdl.ReflectionUtils;
 import wdl.gui.widget.GuiList.GuiListEntry;
 import wdl.versioned.VersionedFunctions;
 
-abstract class ExtGuiScreen extends net.minecraft.client.gui.screen.Screen implements IExtGuiScreen {
+abstract class ExtGuiScreen extends net.minecraft.client.gui.screens.Screen implements IExtGuiScreen {
 
 	/**
 	 * Hide the buttonList field from subclasses.
@@ -48,12 +45,12 @@ abstract class ExtGuiScreen extends net.minecraft.client.gui.screen.Screen imple
 	protected static final Void buttonList = null;
 
 	private final List<GuiList<?>> listList = new ArrayList<>();
-	private final List<TextFieldWidget> textFieldList = new ArrayList<>();
+	private final List<EditBox> textFieldList = new ArrayList<>();
 	@Nullable
-	private MatrixStack matrixStack = null;
-	private CharacterManager characterManager;
+	private PoseStack matrixStack = null;
+	private StringSplitter characterManager;
 
-	protected ExtGuiScreen(ITextComponent title) {
+	protected ExtGuiScreen(Component title) {
 		super(title);
 	}
 
@@ -62,12 +59,12 @@ abstract class ExtGuiScreen extends net.minecraft.client.gui.screen.Screen imple
 	public final void init(Minecraft mc, int width, int height) {
 		this.listList.clear();
 		this.textFieldList.clear();
-		this.characterManager = ReflectionUtils.findAndGetPrivateField(mc.fontRenderer, CharacterManager.class);
+		this.characterManager = ReflectionUtils.findAndGetPrivateField(mc.font, StringSplitter.class);
 		super.init(mc, width, height);
 	}
 
 	@Override
-	public final <T extends Widget> T addButton(T buttonIn) {
+	public final <T extends AbstractWidget> T addButton(T buttonIn) {
 		return super.addButton(buttonIn);
 	}
 
@@ -79,7 +76,7 @@ abstract class ExtGuiScreen extends net.minecraft.client.gui.screen.Screen imple
 	}
 
 	@Override
-	public final <T extends TextFieldWidget> T addTextField(T field) {
+	public final <T extends EditBox> T addTextField(T field) {
 		this.textFieldList.add(field);
 		this.children.add(field);
 		return field;
@@ -142,13 +139,13 @@ abstract class ExtGuiScreen extends net.minecraft.client.gui.screen.Screen imple
 		for (GuiList<?> list : this.listList) {
 			list.tick();
 		}
-		for (TextFieldWidget field : this.textFieldList) {
+		for (EditBox field : this.textFieldList) {
 			field.tick();
 		}
 	}
 
 	@Override
-	public final void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+	public final void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		this.matrixStack = matrixStack;
 		this.render(mouseX, mouseY, partialTicks);
 		this.matrixStack = null;
@@ -169,7 +166,7 @@ abstract class ExtGuiScreen extends net.minecraft.client.gui.screen.Screen imple
 			list.render(matrixStack, mouseX, mouseY, partialTicks);
 		}
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
-		for (TextFieldWidget field : this.textFieldList) {
+		for (EditBox field : this.textFieldList) {
 			field.render(matrixStack, mouseX, mouseY, partialTicks);
 		}
 		this.renderTitle(mouseX, mouseY, partialTicks);
@@ -188,14 +185,14 @@ abstract class ExtGuiScreen extends net.minecraft.client.gui.screen.Screen imple
 	public void fill(int left, int top, int right, int bottom, int color) {
 		super.fill(matrixStack, left, top, right, bottom, color);
 	}
-	public void drawCenteredString(FontRenderer font, String str, int x, int y, int color) {
-		super.drawCenteredString(matrixStack, font, new StringTextComponent(str), x, y, color);
+	public void drawCenteredString(Font font, String str, int x, int y, int color) {
+		super.drawCenteredString(matrixStack, font, new TextComponent(str), x, y, color);
 	}
-	public void drawRightAlignedString(FontRenderer font, String str, int x, int y, int color) {
-		AbstractGui.drawString(matrixStack, font, str, x, y, color);
+	public void drawRightAlignedString(Font font, String str, int x, int y, int color) {
+		GuiComponent.drawString(matrixStack, font, str, x, y, color);
 	}
-	public void drawString(FontRenderer font, String str, int x, int y, int color) {
-		super.drawString(matrixStack, font, new StringTextComponent(str), x, y, color);
+	public void drawString(Font font, String str, int x, int y, int color) {
+		super.drawString(matrixStack, font, new TextComponent(str), x, y, color);
 	}
 	public void blit(int x, int y, int textureX, int textureY, int width, int height) {
 		super.blit(matrixStack, x, y, textureX, textureY, width, height);
@@ -213,7 +210,7 @@ abstract class ExtGuiScreen extends net.minecraft.client.gui.screen.Screen imple
 	 * @param bottomPadding
 	 *            The amount of space to put below the bottom of the info box.
 	 */
-	public void drawGuiInfoBox(@Nullable ITextComponent text, int guiWidth, int guiHeight,
+	public void drawGuiInfoBox(@Nullable Component text, int guiWidth, int guiHeight,
 			int bottomPadding) {
 		drawGuiInfoBox(text, 300, 100, guiWidth, guiHeight, bottomPadding);
 	}
@@ -234,7 +231,7 @@ abstract class ExtGuiScreen extends net.minecraft.client.gui.screen.Screen imple
 	 * @param bottomPadding
 	 *            The amount of space to put below the bottom of the info box.
 	 */
-	public void drawGuiInfoBox(@Nullable ITextComponent text, int infoBoxWidth,
+	public void drawGuiInfoBox(@Nullable Component text, int infoBoxWidth,
 			int infoBoxHeight, int guiWidth, int guiHeight, int bottomPadding) {
 		if (text == null) {
 			return;
@@ -251,7 +248,7 @@ abstract class ExtGuiScreen extends net.minecraft.client.gui.screen.Screen imple
 
 		for (String s : lines) {
 			drawString(font, s, infoX + 5, y, 0xFFFFFF);
-			y += font.FONT_HEIGHT;
+			y += font.lineHeight;
 		}
 	}
 
@@ -264,12 +261,12 @@ abstract class ExtGuiScreen extends net.minecraft.client.gui.screen.Screen imple
 	 * @return A list of lines.
 	 */
 	public List<String> wordWrap(String s, int width) {
-		ITextComponent component = new StringTextComponent(s.replace("\\n", "\n"));
+		Component component = new TextComponent(s.replace("\\n", "\n"));
 
 		// NOTE: This probably doesn't handle legacy formatting.
-		List<ITextProperties> lines = characterManager.func_238362_b_(component, width, Style.EMPTY);
+		List<FormattedText> lines = characterManager.splitLines(component, width, Style.EMPTY);
 
-		return lines.stream().map(ITextProperties::getString).collect(Collectors.toList());
+		return lines.stream().map(FormattedText::getString).collect(Collectors.toList());
 	}
 
 	/**

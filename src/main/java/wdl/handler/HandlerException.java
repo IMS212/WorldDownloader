@@ -14,8 +14,7 @@
 package wdl.handler;
 
 import javax.annotation.Nonnull;
-
-import net.minecraft.client.resources.I18n;
+import net.minecraft.client.resources.language.I18n;
 import wdl.WDLMessageTypes;
 import wdl.api.IWDLMessageType;
 
@@ -71,6 +70,6 @@ public class HandlerException extends Exception {
 
 	@Override
 	public String getLocalizedMessage() {
-		return I18n.format(translationKey, args);
+		return I18n.get(translationKey, args);
 	}
 }

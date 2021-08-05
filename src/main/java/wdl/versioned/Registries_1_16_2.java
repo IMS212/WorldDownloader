@@ -13,10 +13,9 @@
  */
 package wdl.versioned;
 
-import net.minecraft.block.Block;
-import net.minecraft.util.registry.DynamicRegistries;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.core.Registry;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Block;
 
 /**
  * Contains functions that interact with registries.
@@ -37,7 +36,7 @@ final class RegistryFunctions {
 	 * @see VersionedFunctions#getBiomeId
 	 */
 	static final int getBiomeId(Biome biome) {
-		Registry<Biome> biomes = HandlerFunctions.DYNAMIC_REGISTRIES.getRegistry(Registry.BIOME_KEY);
+		Registry<Biome> biomes = HandlerFunctions.DYNAMIC_REGISTRIES.registryOrThrow(Registry.BIOME_REGISTRY);
 		return biomes.getId(biome);
 	}
 }

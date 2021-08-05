@@ -15,12 +15,11 @@ package wdl.versioned;
 
 
 import javax.annotation.Nullable;
-
-import net.minecraft.item.FilledMapItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.server.SMapDataPacket;
-import net.minecraft.world.World;
-import net.minecraft.world.storage.MapData;
+import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.MapItem;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import wdl.versioned.HandlerFunctions.DimensionWrapper;
 
 /**
@@ -36,7 +35,7 @@ final class MapFunctions {
 	 * {@see VersionedFunctions#getMapData}
 	 */
 	@Nullable
-	static MapData getMapData(World world, SMapDataPacket mapPacket) {
+	static MapItemSavedData getMapData(Level world, ClientboundMapItemDataPacket mapPacket) {
 		return world.getMapData("map_" + mapPacket.getMapId());
 	}
 
@@ -44,20 +43,20 @@ final class MapFunctions {
 	 * {@see VersionedFunctions#getMapID}
 	 */
 	static int getMapID(ItemStack stack) {
-		return FilledMapItem.getMapId(stack);
+		return MapItem.getMapId(stack);
 	}
 
 	/* (non-javadoc)
 	 * {@see VersionedFunctions#isMapDimensionNull}
 	 */
-	static boolean isMapDimensionNull(MapData map) {
+	static boolean isMapDimensionNull(MapItemSavedData map) {
 		return map.dimension == null;
 	}
 
 	/* (non-javadoc)
 	 * {@see VersionedFunctions#setMapDimension}
 	 */
-	static void setMapDimension(MapData map, IDimensionWrapper dim) {
+	static void setMapDimension(MapItemSavedData map, IDimensionWrapper dim) {
 		map.dimension = ((DimensionWrapper)dim).getWorldKey();
 	}
 }

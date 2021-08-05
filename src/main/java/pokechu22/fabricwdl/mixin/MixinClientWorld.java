@@ -16,18 +16,12 @@ package pokechu22.fabricwdl.mixin;
 
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
-
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.util.RegistryKey;
-
-import net.minecraft.world.DimensionType;
-
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
-
-import net.minecraft.world.storage.ISpawnWorldInfo;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.storage.WritableLevelData;
 import wdl.WDLHooks;
 import wdl.ducks.IBaseChangesApplied;
 
@@ -37,23 +31,23 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(value={ClientWorld.class})
-public abstract class MixinClientWorld extends World implements IBaseChangesApplied {
+@Mixin(value={ClientLevel.class})
+public abstract class MixinClientWorld extends Level implements IBaseChangesApplied {
 
 
-  protected MixinClientWorld(ISpawnWorldInfo iSpawnWorldInfo, RegistryKey<World> registryKey, DimensionType dimensionType, Supplier<IProfiler> supplier, boolean bl, boolean bl2, long l) {
+  protected MixinClientWorld(WritableLevelData iSpawnWorldInfo, ResourceKey<Level> registryKey, DimensionType dimensionType, Supplier<ProfilerFiller> supplier, boolean bl, boolean bl2, long l) {
     super(iSpawnWorldInfo, registryKey, dimensionType, supplier, bl, bl2, l);
   }
 
   @Inject(method = "tick", at = @At("RETURN"))
   private void onTick(CallbackInfo ci) {
-    WDLHooks.onWorldClientTick((ClientWorld) (Object) this);
+    WDLHooks.onWorldClientTick((ClientLevel) (Object) this);
   }
 
-  @Inject(method = "removeEntityFromWorld", at = @At("HEAD"))
+  @Inject(method = "removeEntity", at = @At("HEAD"))
   private void onRemoveEntityFromWorld(int p_73028_1_, CallbackInfo ci) {
     /* WDL >>> */
-    wdl.WDLHooks.onWorldClientRemoveEntityFromWorld((ClientWorld) (Object) this, p_73028_1_);
+    wdl.WDLHooks.onWorldClientRemoveEntityFromWorld((ClientLevel) (Object) this, p_73028_1_);
     /* <<< WDL */
     //more down here
   }

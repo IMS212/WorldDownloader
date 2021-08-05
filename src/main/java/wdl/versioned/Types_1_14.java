@@ -15,11 +15,10 @@ package wdl.versioned;
 
 
 import java.util.Map;
-
-import net.minecraft.client.GameSettings;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.network.chat.TextComponent;
 
 /**
  * Functions that help deal with things that vary in type between versions.
@@ -36,15 +35,15 @@ final class TypeFunctions {
 	/* (non-javadoc)
 	 * @see VersionedFunctions#customName
 	 */
-	static StringTextComponent customName(String name) {
-		return new StringTextComponent(name);
+	static TextComponent customName(String name) {
+		return new TextComponent(name);
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#createNewGameSettings
 	 */
-	static GameSettings createNewGameSettings() {
-		return new GameSettings(Minecraft.getInstance(), Minecraft.getInstance().gameDir);
+	static Options createNewGameSettings() {
+		return new Options(Minecraft.getInstance(), Minecraft.getInstance().gameDirectory);
 	}
 
 	/* (non-javadoc)

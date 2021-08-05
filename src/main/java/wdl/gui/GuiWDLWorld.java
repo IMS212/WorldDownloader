@@ -14,12 +14,11 @@
 package wdl.gui;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.WDL;
 import wdl.config.BooleanSetting;
 import wdl.config.IConfiguration;
@@ -51,7 +50,7 @@ public class GuiWDLWorld extends WDLScreen {
 	private int spawnTextY;
 
 	/**
-	 * @see net.minecraft.client.gui.widget.button.LockIconButton
+	 * @see net.minecraft.client.gui.components.LockIconButton
 	 */
 	private class LockSettingButton extends SettingButton {
 		private final BooleanSetting setting;
@@ -59,7 +58,7 @@ public class GuiWDLWorld extends WDLScreen {
 		public LockSettingButton(BooleanSetting setting, IConfiguration config, int x, int y) {
 			super(setting, config, x, y, 20, 20);
 			this.setting = setting;
-			setMessage(new StringTextComponent(""));
+			setMessage(new TextComponent(""));
 		}
 
 		@Override
@@ -69,7 +68,7 @@ public class GuiWDLWorld extends WDLScreen {
 		}
 
 		@Override
-		public ITextComponent getNarratorMessage() {
+		public Component getNarratorMessage() {
 			return config.getButtonText(setting);
 		}
 
@@ -77,13 +76,13 @@ public class GuiWDLWorld extends WDLScreen {
 		public void afterDraw() {
 			int textureX = config.getValue((BooleanSetting)this.setting) ? 0 : 20; 
 			int textureY = this.isHovered() ? 166 : 146;
-			minecraft.getTextureManager().bindTexture(Button.WIDGETS_LOCATION);
+			minecraft.getTextureManager().bind(Button.WIDGETS_LOCATION);
 			blit(this.x, this.y, textureX, textureY, this.width, this.height);
 		}
 	}
 
 	public GuiWDLWorld(@Nullable Screen parent, WDL wdl) {
-		super(new TranslationTextComponent("wdl.gui.world.title", WDL.baseFolderName));
+		super(new TranslatableComponent("wdl.gui.world.title", WDL.baseFolderName));
 		this.parent = parent;
 		this.wdl = wdl;
 		this.config = wdl.worldProps;
@@ -124,22 +123,22 @@ public class GuiWDLWorld extends WDLScreen {
 		this.spawnTextY = y + 4;
 		this.spawnX = this.addTextField(new GuiNumericTextField(this.font,
 				this.width / 2 - 87, y, 50, 16,
-				new TranslationTextComponent("wdl.gui.world.spawn.coord", "X")));
+				new TranslatableComponent("wdl.gui.world.spawn.coord", "X")));
 		this.spawnY = this.addTextField(new GuiNumericTextField(this.font,
 				this.width / 2 - 19, y, 50, 16,
-				new TranslationTextComponent("wdl.gui.world.spawn.coord", "Y")));
+				new TranslatableComponent("wdl.gui.world.spawn.coord", "Y")));
 		this.spawnZ = this.addTextField(new GuiNumericTextField(this.font,
 				this.width / 2 + 48, y, 50, 16,
-				new TranslationTextComponent("wdl.gui.world.spawn.coord", "Z")));
+				new TranslatableComponent("wdl.gui.world.spawn.coord", "Z")));
 		spawnX.setValue(config.getValue(WorldSettings.SPAWN_X));
 		spawnY.setValue(config.getValue(WorldSettings.SPAWN_Y));
 		spawnZ.setValue(config.getValue(WorldSettings.SPAWN_Z));
-		this.spawnX.setMaxStringLength(7);
-		this.spawnY.setMaxStringLength(7);
-		this.spawnZ.setMaxStringLength(7);
+		this.spawnX.setMaxLength(7);
+		this.spawnY.setMaxLength(7);
+		this.spawnZ.setMaxLength(7);
 		y += 18;
 		this.pickSpawnBtn = this.addButton(new WDLButton(this.width / 2, y, 100, 20,
-				new TranslationTextComponent("wdl.gui.world.setSpawnToCurrentPosition")) {
+				new TranslatableComponent("wdl.gui.world.setSpawnToCurrentPosition")) {
 			public @Override void performAction() {
 				setSpawnToPlayerPosition();
 			}
@@ -152,11 +151,11 @@ public class GuiWDLWorld extends WDLScreen {
 	}
 
 	@Override
-	public void onClose() {
+	public void removed() {
 		if (this.showSpawnFields) {
-			this.config.setValue(WorldSettings.SPAWN_X, spawnX.getValue());
-			this.config.setValue(WorldSettings.SPAWN_Y, spawnY.getValue());
-			this.config.setValue(WorldSettings.SPAWN_Z, spawnZ.getValue());
+			this.config.setValue(WorldSettings.SPAWN_X, spawnX.getValue(0));
+			this.config.setValue(WorldSettings.SPAWN_Y, spawnY.getValue(0));
+			this.config.setValue(WorldSettings.SPAWN_Z, spawnZ.getValue(0));
 		}
 
 		wdl.saveProps();
@@ -180,7 +179,7 @@ public class GuiWDLWorld extends WDLScreen {
 
 		super.render(mouseX, mouseY, partialTicks);
 
-		ITextComponent tooltip = null;
+		Component tooltip = null;
 
 		if (allowCheatsBtn.isHovered()) {
 			tooltip = allowCheatsBtn.getTooltip();
@@ -197,14 +196,14 @@ public class GuiWDLWorld extends WDLScreen {
 		} else if (spawnBtn.isHovered()) {
 			tooltip = spawnBtn.getTooltip();
 		} else if (pickSpawnBtn.isHovered()) {
-			tooltip = new TranslationTextComponent("wdl.gui.world.setSpawnToCurrentPosition.description");
+			tooltip = new TranslatableComponent("wdl.gui.world.setSpawnToCurrentPosition.description");
 		} else if (showSpawnFields) {
 			if (spawnX.isHovered()) {
-				tooltip = new TranslationTextComponent("wdl.gui.world.spawnPos.description", "X");
+				tooltip = new TranslatableComponent("wdl.gui.world.spawnPos.description", "X");
 			} else if (spawnY.isHovered()) {
-				tooltip = new TranslationTextComponent("wdl.gui.world.spawnPos.description", "Y");
+				tooltip = new TranslatableComponent("wdl.gui.world.spawnPos.description", "Y");
 			} else if (spawnZ.isHovered()) {
-				tooltip = new TranslationTextComponent("wdl.gui.world.spawnPos.description", "Z");
+				tooltip = new TranslatableComponent("wdl.gui.world.spawnPos.description", "Z");
 			}
 		}
 

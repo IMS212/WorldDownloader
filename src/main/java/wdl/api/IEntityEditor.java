@@ -13,7 +13,7 @@
  */
 package wdl.api;
 
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 
 /**
  * Something that can edit entities as they are being saved.

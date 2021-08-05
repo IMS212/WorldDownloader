@@ -13,7 +13,7 @@
  */
 package wdl.gui.widget;
 
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.chat.Component;
 
 /**
  * Methods that should be provided on the implementation-specific ExtButton.
@@ -52,11 +52,11 @@ interface IExtButton {
 	/**
 	 * Sets the message associated with this button.
 	 */
-	abstract void setMessage(ITextComponent message);
+	abstract void setMessage(Component message);
 	/**
 	 * Gets the message the narrator should read.
 	 */
-	abstract ITextComponent getNarratorMessage();
+	abstract Component getNarratorMessage();
 	/**
 	 * Sets whether or not this button is enabled/active.
 	 */

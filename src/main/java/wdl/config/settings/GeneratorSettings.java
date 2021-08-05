@@ -20,10 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.util.StringRepresentable;
 import wdl.config.BooleanSetting;
 import wdl.config.CyclableSetting;
 import wdl.config.IConfiguration;
@@ -49,7 +48,7 @@ public final class GeneratorSettings {
 	public static final Setting<Integer> GENERATOR_VERSION = new VersionSetting("GeneratorVersion");
 	public static final Setting<String> GENERATOR_OPTIONS = new OptionSetting("GeneratorOptions");
 
-	public enum Generator implements IStringSerializable {
+	public enum Generator implements StringRepresentable {
 		VOID("void", "flat", 0, VersionedFunctions.VOID_FLAT_CONFIG),
 		DEFAULT("default", "default", 1, ""),
 		FLAT("flat", "flat", 0, ""),
@@ -83,7 +82,7 @@ public final class GeneratorSettings {
 		}
 
 		@Override
-		public String getString() {
+		public String getSerializedName() {
 			return confName;
 		}
 	}
@@ -113,7 +112,7 @@ public final class GeneratorSettings {
 
 		@Override
 		public String serializeToString(Generator value) {
-			return value.getString();
+			return value.getSerializedName();
 		}
 
 		@Override
@@ -132,13 +131,13 @@ public final class GeneratorSettings {
 		}
 
 		@Override
-		public ITextComponent getDescription() {
-			return new TranslationTextComponent(key + ".description");
+		public Component getDescription() {
+			return new TranslatableComponent(key + ".description");
 		}
 
 		@Override
-		public ITextComponent getButtonText(Generator curValue) {
-			return new TranslationTextComponent(key + "." + serializeToString(curValue));
+		public Component getButtonText(Generator curValue) {
+			return new TranslatableComponent(key + "." + serializeToString(curValue));
 		}
 	}
 

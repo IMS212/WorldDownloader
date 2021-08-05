@@ -13,17 +13,17 @@
  */
 package wdl.handler.block;
 
-import net.minecraft.inventory.container.FurnaceContainer;
-import net.minecraft.tileentity.FurnaceTileEntity;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.inventory.FurnaceMenu;
+import net.minecraft.world.level.block.entity.FurnaceBlockEntity;
 
-public class FurnaceHandler extends BaseFurnaceHandler<FurnaceTileEntity, FurnaceContainer> {
+public class FurnaceHandler extends BaseFurnaceHandler<FurnaceBlockEntity, FurnaceMenu> {
 	public FurnaceHandler() {
-		super(FurnaceTileEntity.class, FurnaceContainer.class, "container.furnace");
+		super(FurnaceBlockEntity.class, FurnaceMenu.class, "container.furnace");
 	}
 
 	@Override
-	protected TranslationTextComponent getMessage() {
-		return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.furnace");
+	protected TranslatableComponent getMessage() {
+		return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.furnace");
 	}
 }

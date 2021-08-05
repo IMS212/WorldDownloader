@@ -14,23 +14,22 @@
 package wdl.gui.widget;
 
 import java.util.List;
-
-import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Font;
 
 /**
  * {@link GuiListExtended} that provides scrollable lines of text, and support
  * for embedding links in it.
  */
 public class TextList extends GuiList<TextEntry> {
-	private final FontRenderer font;
+	private final Font font;
 
 	/**
 	 * Creates a new TextList with no text.
 	 */
-	public TextList(WDLScreen screen, FontRenderer font, int width, int height, int topMargin,
+	public TextList(WDLScreen screen, Font font, int width, int height, int topMargin,
 			int bottomMargin) {
 		super(screen, width, height, topMargin, height - bottomMargin,
-				font.FONT_HEIGHT + 1);
+				font.lineHeight + 1);
 		this.font = font;
 	}
 

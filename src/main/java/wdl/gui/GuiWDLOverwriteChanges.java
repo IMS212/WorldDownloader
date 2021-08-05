@@ -14,10 +14,9 @@
 package wdl.gui;
 
 import java.io.IOException;
-
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.WDL;
 import wdl.WDLMessageTypes;
 import wdl.WDLMessages;
@@ -46,10 +45,10 @@ public class GuiWDLOverwriteChanges extends GuiTurningCameraBase implements IBac
 				String name = WDL.getWorldFolderName(WDL.worldName);
 				if (zip) {
 					backupData = I18n
-							.format("wdl.gui.overwriteChanges.backingUp.zip", name);
+							.get("wdl.gui.overwriteChanges.backingUp.zip", name);
 				} else {
 					backupData = I18n
-							.format("wdl.gui.overwriteChanges.backingUp.folder", name);
+							.get("wdl.gui.overwriteChanges.backingUp.folder", name);
 				}
 
 				WorldBackup.backupWorld(wdl.saveHandler.getWorldDirectory(),
@@ -127,20 +126,20 @@ public class GuiWDLOverwriteChanges extends GuiTurningCameraBase implements IBac
 		backingUp = false;
 
 		if (lastSaved != -1) {
-			footer = I18n.format("wdl.gui.overwriteChanges.footer", lastSaved, lastPlayed);
+			footer = I18n.get("wdl.gui.overwriteChanges.footer", lastSaved, lastPlayed);
 		} else {
-			footer = I18n.format("wdl.gui.overwriteChanges.footerNeverSaved", lastPlayed);
+			footer = I18n.get("wdl.gui.overwriteChanges.footerNeverSaved", lastPlayed);
 		}
-		captionTitle = I18n.format("wdl.gui.overwriteChanges.captionTitle");
-		captionSubtitle = I18n.format("wdl.gui.overwriteChanges.captionSubtitle");
-		overwriteWarning1 = I18n.format("wdl.gui.overwriteChanges.overwriteWarning1");
-		overwriteWarning2 = I18n.format("wdl.gui.overwriteChanges.overwriteWarning2");
+		captionTitle = I18n.get("wdl.gui.overwriteChanges.captionTitle");
+		captionSubtitle = I18n.get("wdl.gui.overwriteChanges.captionSubtitle");
+		overwriteWarning1 = I18n.get("wdl.gui.overwriteChanges.overwriteWarning1");
+		overwriteWarning2 = I18n.get("wdl.gui.overwriteChanges.overwriteWarning2");
 
-		backingUpTitle = I18n.format("wdl.gui.overwriteChanges.backingUp.title");
+		backingUpTitle = I18n.get("wdl.gui.overwriteChanges.backingUp.title");
 
 		// TODO: Figure out the widest between captionTitle, captionSubtitle,
 		// overwriteWarning1, and overwriteWarning2.
-		infoBoxWidth = font.getStringWidth(overwriteWarning1);
+		infoBoxWidth = font.width(overwriteWarning1);
 		infoBoxHeight = 22 * 6;
 
 		// Ensure that the infobox is wide enough for the buttons.
@@ -157,7 +156,7 @@ public class GuiWDLOverwriteChanges extends GuiTurningCameraBase implements IBac
 		int y = infoBoxY + 22;
 
 		backupAsZipButton = this.addButton(new WDLButton(x, y, 200, 20,
-				new TranslationTextComponent("wdl.gui.overwriteChanges.asZip.name")) {
+				new TranslatableComponent("wdl.gui.overwriteChanges.asZip.name")) {
 			public @Override void performAction() {
 				if (backingUp) return;
 				backingUp = true;
@@ -166,7 +165,7 @@ public class GuiWDLOverwriteChanges extends GuiTurningCameraBase implements IBac
 		});
 		y += 22;
 		backupAsFolderButton = this.addButton(new WDLButton(x, y, 200, 20,
-				new TranslationTextComponent("wdl.gui.overwriteChanges.asFolder.name")) {
+				new TranslatableComponent("wdl.gui.overwriteChanges.asFolder.name")) {
 			public @Override void performAction() {
 				if (backingUp) return;
 				backingUp = true;
@@ -175,14 +174,14 @@ public class GuiWDLOverwriteChanges extends GuiTurningCameraBase implements IBac
 		});
 		y += 22;
 		downloadNowButton = this.addButton(new WDLButton(x, y, 200, 20,
-				new TranslationTextComponent("wdl.gui.overwriteChanges.startNow.name")) {
+				new TranslatableComponent("wdl.gui.overwriteChanges.startNow.name")) {
 			public @Override void performAction() {
 				callback.run();
 			}
 		});
 		y += 22;
 		cancelButton = this.addButton(new WDLButton(x, y, 200, 20,
-				new TranslationTextComponent("wdl.gui.overwriteChanges.cancel.name")) {
+				new TranslatableComponent("wdl.gui.overwriteChanges.cancel.name")) {
 			public @Override void performAction() {
 				cancel.run();
 			}
@@ -209,7 +208,7 @@ public class GuiWDLOverwriteChanges extends GuiTurningCameraBase implements IBac
 			drawCenteredString(font, backupData,
 					width / 2, height / 4 - 10, 0xFFFFFF);
 			if (backupFile != null) {
-				String text = I18n.format(
+				String text = I18n.get(
 						"wdl.gui.overwriteChanges.backingUp.progress",
 						backupCurrent, backupCount, backupFile);
 				drawCenteredString(font, text, width / 2,
@@ -220,7 +219,7 @@ public class GuiWDLOverwriteChanges extends GuiTurningCameraBase implements IBac
 			this.drawBorder(32, 22, 0, 0, height, width);
 
 			drawCenteredString(font, footer, width / 2, height - 8
-					- font.FONT_HEIGHT, 0xFFFFFF);
+					- font.lineHeight, 0xFFFFFF);
 
 			fill(infoBoxX - 5, infoBoxY - 5, infoBoxX + infoBoxWidth + 5,
 					infoBoxY + infoBoxHeight + 5, 0xB0000000);
@@ -228,24 +227,24 @@ public class GuiWDLOverwriteChanges extends GuiTurningCameraBase implements IBac
 			drawCenteredString(font, captionTitle, width / 2,
 					infoBoxY, 0xFFFFFF);
 			drawCenteredString(font, captionSubtitle, width / 2,
-					infoBoxY + font.FONT_HEIGHT, 0xFFFFFF);
+					infoBoxY + font.lineHeight, 0xFFFFFF);
 
 			drawCenteredString(font, overwriteWarning1, width / 2,
 					infoBoxY + 115, 0xFFFFFF);
 			drawCenteredString(font, overwriteWarning2, width / 2,
-					infoBoxY + 115 + font.FONT_HEIGHT, 0xFFFFFF);
+					infoBoxY + 115 + font.lineHeight, 0xFFFFFF);
 
 			super.render(mouseX, mouseY, partialTicks);
 
-			ITextComponent tooltip = null;
+			Component tooltip = null;
 			if (backupAsZipButton.isHovered()) {
-				tooltip = new TranslationTextComponent("wdl.gui.overwriteChanges.asZip.description");
+				tooltip = new TranslatableComponent("wdl.gui.overwriteChanges.asZip.description");
 			} else if (backupAsFolderButton.isHovered()) {
-				tooltip = new TranslationTextComponent("wdl.gui.overwriteChanges.asFolder.description");
+				tooltip = new TranslatableComponent("wdl.gui.overwriteChanges.asFolder.description");
 			} else if (downloadNowButton.isHovered()) {
-				tooltip = new TranslationTextComponent("wdl.gui.overwriteChanges.startNow.description");
+				tooltip = new TranslatableComponent("wdl.gui.overwriteChanges.startNow.description");
 			} else if (cancelButton.isHovered()) {
-				tooltip = new TranslationTextComponent("wdl.gui.overwriteChanges.cancel.description");
+				tooltip = new TranslatableComponent("wdl.gui.overwriteChanges.cancel.description");
 			}
 
 			this.drawGuiInfoBox(tooltip, width, height, 48);

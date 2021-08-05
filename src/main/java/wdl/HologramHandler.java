@@ -14,11 +14,9 @@
 package wdl;
 
 import java.util.Set;
-
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import com.google.common.collect.Sets;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.ArmorStandEntity;
 import wdl.api.IEntityManager;
 import wdl.api.IWDLMod;
 import wdl.api.IWDLModDescripted;
@@ -63,7 +61,7 @@ IWDLModDescripted {
 
 	@Override
 	public String getIdentifierFor(Entity entity) {
-		if (entity instanceof ArmorStandEntity &&
+		if (entity instanceof ArmorStand &&
 				entity.isInvisible() &&
 				entity.hasCustomName()) {
 			return "x-extended:hologram";

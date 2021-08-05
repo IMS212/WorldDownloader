@@ -13,10 +13,10 @@
  */
 package wdl.api;
 
-import net.minecraft.block.Block;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.chunk.LevelChunk;
 
 /**
  * {@link IWDLMod} that helps identify "problematic" tile entities that need to
@@ -46,5 +46,5 @@ public interface ITileEntityImportationIdentifier extends IWDLMod {
 	 * @return <code>true</code> if that tile entity should be imported.
 	 */
 	public boolean shouldImportTileEntity(String entityID, BlockPos pos,
-			Block block, CompoundNBT tileEntityNBT, Chunk chunk);
+			Block block, CompoundTag tileEntityNBT, LevelChunk chunk);
 }

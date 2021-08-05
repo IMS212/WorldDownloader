@@ -14,14 +14,14 @@
 package wdl.versioned;
 
 import io.netty.buffer.Unpooled;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.network.play.client.CCustomPayloadPacket;
-import net.minecraft.network.play.server.SChatPacket;
-import net.minecraft.network.play.server.SCustomPayloadPlayPacket;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Util;
-import net.minecraft.util.text.ChatType;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.Util;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.ChatType;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.protocol.game.ClientboundChatPacket;
+import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
+import net.minecraft.resources.ResourceLocation;
 import wdl.versioned.VersionedFunctions.ChannelName;
 
 /**
@@ -39,22 +39,22 @@ final class PacketFunctions {
 	/* (non-javadoc)
 	 * @see VersionedFunctions#makePluginMessagePacket
 	 */
-	static CCustomPayloadPacket makePluginMessagePacket(@ChannelName String channel, byte[] bytes) {
-		return new CCustomPayloadPacket(new ResourceLocation(channel), new PacketBuffer(Unpooled.copiedBuffer(bytes)));
+	static ServerboundCustomPayloadPacket makePluginMessagePacket(@ChannelName String channel, byte[] bytes) {
+		return new ServerboundCustomPayloadPacket(new ResourceLocation(channel), new FriendlyByteBuf(Unpooled.copiedBuffer(bytes)));
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#makeServerPluginMessagePacket
 	 */
-	static SCustomPayloadPlayPacket makeServerPluginMessagePacket(@ChannelName String channel, byte[] bytes) {
-		return new SCustomPayloadPlayPacket(new ResourceLocation(channel), new PacketBuffer(Unpooled.copiedBuffer(bytes)));
+	static ClientboundCustomPayloadPacket makeServerPluginMessagePacket(@ChannelName String channel, byte[] bytes) {
+		return new ClientboundCustomPayloadPacket(new ResourceLocation(channel), new FriendlyByteBuf(Unpooled.copiedBuffer(bytes)));
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#makeChatPacket
 	 */
-	static SChatPacket makeChatPacket(String message) {
-		return new SChatPacket(new StringTextComponent(message), ChatType.SYSTEM, Util.DUMMY_UUID);
+	static ClientboundChatPacket makeChatPacket(String message) {
+		return new ClientboundChatPacket(new TextComponent(message), ChatType.SYSTEM, Util.NIL_UUID);
 	}
 
 	/* (non-javadoc)

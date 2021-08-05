@@ -13,28 +13,26 @@
  */
 package wdl.gui.widget;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import javax.annotation.Nullable;
-
-import com.mojang.blaze3d.matrix.MatrixStack;
-
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.Component;
 
 /**
  * Extendible text field, to deal with changing constructors between versions.
  * The actual implementation is {@link WDLTextField}.
  */
-abstract class ExtTextField extends TextFieldWidget {
+abstract class ExtTextField extends EditBox {
 	/**
-	 * @deprecated Do not use; use {@link #setEnabled} instead.
+	 * @deprecated Do not use; use {@link #setEditable} instead.
 	 */
 	@Deprecated
 	protected static final Void active = null;
 	@Nullable
-	private MatrixStack matrixStack = null;
+	private PoseStack matrixStack = null;
 
-	public ExtTextField(FontRenderer fontRenderer, int x, int y, int width, int height, ITextComponent label) {
+	public ExtTextField(Font fontRenderer, int x, int y, int width, int height, Component label) {
 		super(fontRenderer, x, y, width, height, label);
 	}
 }

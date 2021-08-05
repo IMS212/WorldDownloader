@@ -13,12 +13,12 @@
  */
 package wdl.versioned;
 
-import net.minecraft.nbt.DoubleNBT;
-import net.minecraft.nbt.FloatNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.ShortNBT;
-import net.minecraft.nbt.StringNBT;
+import net.minecraft.nbt.DoubleTag;
+import net.minecraft.nbt.FloatTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.ShortTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 
 /**
  * 1.15 hides some NBT constructors; therefore, this is used to call
@@ -30,17 +30,17 @@ final class NBTFunctions {
 	/* (non-javadoc)
 	 * @see VersionedFunctions#nbtString
 	 */
-	static String nbtString(INBT tag) {
-		return tag.toFormattedComponent("    ", 0).getString();
+	static String nbtString(Tag tag) {
+		return tag.getPrettyDisplay("    ", 0).getString();
 	}
 
 	/* (non-javadoc)
 	 * @see VersionedFunctions#createFloatListTag
 	 */
-	static ListNBT createFloatListTag(float... values) {
-		ListNBT result = new ListNBT();
+	static ListTag createFloatListTag(float... values) {
+		ListTag result = new ListTag();
 		for (float value : values) {
-			result.add(FloatNBT.valueOf(value));
+			result.add(FloatTag.valueOf(value));
 		}
 		return result;
 	}
@@ -48,10 +48,10 @@ final class NBTFunctions {
 	/* (non-javadoc)
 	 * @see VersionedFunctions#createDoubleListTag
 	 */
-	static ListNBT createDoubleListTag(double... values) {
-		ListNBT result = new ListNBT();
+	static ListTag createDoubleListTag(double... values) {
+		ListTag result = new ListTag();
 		for (double value : values) {
-			result.add(DoubleNBT.valueOf(value));
+			result.add(DoubleTag.valueOf(value));
 		}
 		return result;
 	}
@@ -59,10 +59,10 @@ final class NBTFunctions {
 	/* (non-javadoc)
 	 * @see VersionedFunctions#createShortListTag
 	 */
-	static ListNBT createShortListTag(short... values) {
-		ListNBT result = new ListNBT();
+	static ListTag createShortListTag(short... values) {
+		ListTag result = new ListTag();
 		for (short value : values) {
-			result.add(ShortNBT.valueOf(value));
+			result.add(ShortTag.valueOf(value));
 		}
 		return result;
 	}
@@ -70,7 +70,7 @@ final class NBTFunctions {
 	/* (non-javadoc)
 	 * @see VersionedFunctions#createStringTag
 	 */
-	static StringNBT createStringTag(String value) {
-		return StringNBT.valueOf(value);
+	static StringTag createStringTag(String value) {
+		return StringTag.valueOf(value);
 	}
 }

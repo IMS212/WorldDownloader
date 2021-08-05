@@ -18,15 +18,14 @@ import static wdl.versioned.VersionedFunctions.*;
 import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ChestBlock;
-import net.minecraft.inventory.container.ChestContainer;
-import net.minecraft.state.properties.ChestType;
-import net.minecraft.tileentity.ChestTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import wdl.WDLMessageTypes;
 import wdl.handler.HandlerException;
 
@@ -39,8 +38,8 @@ import wdl.handler.HandlerException;
  * It is also important to note that sometimes, this logic is flipped from the behavior in 1.12,
  * as chests now are rotated properly.
  */
-abstract class BaseLargeChestHandler<B extends ChestTileEntity> extends BlockHandler<B, ChestContainer> {
-	protected BaseLargeChestHandler(Class<B> blockEntityClass, Class<ChestContainer> containerClass,
+abstract class BaseLargeChestHandler<B extends ChestBlockEntity> extends BlockHandler<B, ChestMenu> {
+	protected BaseLargeChestHandler(Class<B> blockEntityClass, Class<ChestMenu> containerClass,
 			String... defaultNames) {
 		super(blockEntityClass, containerClass, defaultNames);
 	}
@@ -57,12 +56,12 @@ abstract class BaseLargeChestHandler<B extends ChestTileEntity> extends BlockHan
 	 * @param displayName The custom name of the chest, or <code>null</code> if none is set.
 	 * @throws HandlerException As per {@link #handle}
 	 */
-	protected void saveDoubleChest(BlockPos clickedPos, ChestContainer container,
-			B blockEntity, IBlockReader world,
+	protected void saveDoubleChest(BlockPos clickedPos, ChestMenu container,
+			B blockEntity, BlockGetter world,
 			BiConsumer<BlockPos, B> saveMethod,
 			@Nullable String displayName) throws HandlerException {
 		BlockState state = world.getBlockState(clickedPos);
-		ChestType type = state.get(ChestBlock.TYPE);
+		ChestType type = state.getValue(ChestBlock.TYPE);
 
 		boolean right;
 		switch (type) {
@@ -71,12 +70,12 @@ abstract class BaseLargeChestHandler<B extends ChestTileEntity> extends BlockHan
 		default: throw new HandlerException("wdl.messages.onGuiClosedWarning.failedToFindDoubleChest", WDLMessageTypes.ERROR);
 		}
 
-		BlockPos otherPos = clickedPos.offset(ChestBlock.getDirectionToAttached(state));
+		BlockPos otherPos = clickedPos.relative(ChestBlock.getConnectedDirection(state));
 
 		BlockPos chestPos1 = (right ? clickedPos : otherPos);
 		BlockPos chestPos2 = (right ? otherPos : clickedPos);
-		TileEntity te1 = world.getTileEntity(chestPos1);
-		TileEntity te2 = world.getTileEntity(chestPos2);
+		BlockEntity te1 = world.getBlockEntity(chestPos1);
+		BlockEntity te2 = world.getBlockEntity(chestPos2);
 
 		if (!(blockEntityClass.isInstance(te1) && blockEntityClass.isInstance(te2))) {
 			throw new HandlerException("wdl.messages.onGuiClosedWarning.failedToFindDoubleChest", WDLMessageTypes.ERROR);

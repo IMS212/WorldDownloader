@@ -14,12 +14,12 @@
 
 package wdl;
 
-import static net.minecraft.util.text.TextFormatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static wdl.MessageTypeCategory.*;
 
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.api.IMessageTypeAdder;
 import wdl.api.IWDLMessageType;
 
@@ -57,8 +57,8 @@ public enum WDLMessageTypes implements IWDLMessageType {
 	/**
 	 * Constructor that allows specification of all values.
 	 */
-	private WDLMessageTypes(String i18nKey, TextFormatting titleColor,
-			TextFormatting textColor, boolean enabledByDefault,
+	private WDLMessageTypes(String i18nKey, ChatFormatting titleColor,
+			ChatFormatting textColor, boolean enabledByDefault,
 			MessageTypeCategory category) {
 		this.displayTextKey = i18nKey + ".text";
 		this.titleColor = titleColor;
@@ -75,11 +75,11 @@ public enum WDLMessageTypes implements IWDLMessageType {
 	/**
 	 * Format code for the '[WorldDL]' label.
 	 */
-	private final TextFormatting titleColor;
+	private final ChatFormatting titleColor;
 	/**
 	 * Format code for the text after the label.
 	 */
-	private final TextFormatting textColor;
+	private final ChatFormatting textColor;
 	/**
 	 * I18n key for the description text.
 	 */
@@ -94,23 +94,23 @@ public enum WDLMessageTypes implements IWDLMessageType {
 	final MessageTypeCategory category;
 
 	@Override
-	public ITextComponent getDisplayName() {
-		return new TranslationTextComponent(displayTextKey);
+	public Component getDisplayName() {
+		return new TranslatableComponent(displayTextKey);
 	}
 
 	@Override
-	public TextFormatting getTitleColor() {
+	public ChatFormatting getTitleColor() {
 		return titleColor;
 	}
 
 	@Override
-	public TextFormatting getTextColor() {
+	public ChatFormatting getTextColor() {
 		return textColor;
 	}
 
 	@Override
-	public ITextComponent getDescription() {
-		return new TranslationTextComponent(descriptionKey);
+	public Component getDescription() {
+		return new TranslatableComponent(descriptionKey);
 	}
 
 	@Override

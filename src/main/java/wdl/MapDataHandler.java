@@ -18,30 +18,28 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.maps.MapDecoration;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import com.google.common.annotations.VisibleForTesting;
-
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.ItemFrameEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.play.server.SMapDataPacket;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
-import net.minecraft.world.storage.MapData;
-import net.minecraft.world.storage.MapDecoration;
 import wdl.versioned.IDimensionWrapper;
 import wdl.versioned.VersionedFunctions;
 
 /**
  * Attempts to reconstruct information about a MapData that isn't present.
  *
- * From {@link SMapDataPacket#setMapdataTo}, we already have:
+ * From {@link ClientboundMapItemDataPacket#applyToMap}, we already have:
  *
  * <ul>
  * <li>mapScale (byte for size)
@@ -90,9 +88,9 @@ public final class MapDataHandler {
 	 * @param player {@link WDL#player}.
 	 * @return The MapData to save, though currently it is the same reference as the parameter.
 	 */
-	public static MapDataResult repairMapData(int mapID, @Nonnull MapData mapData, @Nonnull PlayerEntity player) {
+	public static MapDataResult repairMapData(int mapID, @Nonnull MapItemSavedData mapData, @Nonnull Player player) {
 		MapDataResult result = checkPlayerHasMap(mapID, mapData, player);
-		if (result == null) result = checkFrameHasMap(mapID, mapData, player.world);
+		if (result == null) result = checkFrameHasMap(mapID, mapData, player.level);
 		if (result == null) result = new MapDataResult(mapData, null, null);
 
 		result.fixDimension();
@@ -102,10 +100,10 @@ public final class MapDataHandler {
 	}
 
 	@Nullable
-	private static MapDataResult checkPlayerHasMap(int mapID, MapData mapData, PlayerEntity player) {
+	private static MapDataResult checkPlayerHasMap(int mapID, MapItemSavedData mapData, Player player) {
 		// If there's only one decoration, and our player has the map in their inventory,
 		// assume that the icon is our player (which might not be the case all the time)
-		List<MapDecoration> playerDecorations = mapData.mapDecorations.values().stream()
+		List<MapDecoration> playerDecorations = mapData.decorations.values().stream()
 				.filter(dec -> dec.getImage() == DECORATION_PLAYER)
 				.collect(Collectors.toList());
 
@@ -117,13 +115,13 @@ public final class MapDataHandler {
 		boolean mapInInventory = false;
 		// Note: mainInventory does NOT contain the offhand or armor
 		// Thus, we need an explicit offhand check later.  Maps shoudln't ever be in armor though.
-		for (ItemStack stack : player.inventory.mainInventory) {
+		for (ItemStack stack : player.inventory.items) {
 			if (isMapWithID(stack, mapID)) {
 				mapInInventory = true;
 				break;
 			}
 		}
-		if (!mapInInventory) mapInInventory = isMapWithID(player.getHeldItemOffhand(), mapID);
+		if (!mapInInventory) mapInInventory = isMapWithID(player.getOffhandItem(), mapID);
 
 		if (mapInInventory) {
 			return new MapDataResult(mapData, player, playerDecoration);
@@ -133,8 +131,8 @@ public final class MapDataHandler {
 	}
 
 	@Nullable
-	private static MapDataResult checkFrameHasMap(int mapID, MapData mapData, World world) {
-		List<MapDecoration> frameDecorations = mapData.mapDecorations.values().stream()
+	private static MapDataResult checkFrameHasMap(int mapID, MapItemSavedData mapData, Level world) {
+		List<MapDecoration> frameDecorations = mapData.decorations.values().stream()
 				.filter(dec -> dec.getImage() == DECORATION_ITEM_FRAME)
 				.collect(Collectors.toList());
 		if (frameDecorations.isEmpty()) {
@@ -145,13 +143,13 @@ public final class MapDataHandler {
 		byte scale = mapData.scale;
 
 		// No convenient way to filter it seems
-		Iterable<Entity> entities = ((ClientWorld)world).getAllEntities();
+		Iterable<Entity> entities = ((ClientLevel)world).entitiesForRendering();
 		for (Entity e : entities) {
-			if (!(e instanceof ItemFrameEntity)) {
+			if (!(e instanceof ItemFrame)) {
 				continue;
 			}
-			ItemFrameEntity frame = (ItemFrameEntity)e;
-			ItemStack stack = frame.getDisplayedItem();
+			ItemFrame frame = (ItemFrame)e;
+			ItemStack stack = frame.getItem();
 			if (!isMapWithID(stack, mapID)) {
 				continue;
 			}
@@ -159,7 +157,7 @@ public final class MapDataHandler {
 			// look for frames in the world that aren't on the map instead.
 			// However, it's entirely possible to also have frames that just beyond the edge of the map...
 
-			BlockPos framePos = frame.getHangingPosition();
+			BlockPos framePos = frame.getPos();
 			// Find the center assuming this frame is on the map
 			int xCenter = worldCoordToMapCenter(framePos.getX(), mapData.scale);
 			int zCenter = worldCoordToMapCenter(framePos.getZ(), mapData.scale);
@@ -187,14 +185,14 @@ public final class MapDataHandler {
 	/**
 	 * Converts a world coordinate to a map center (also in world coordinates)
 	 *
-	 * @see MapData#calculateMapCenter
+	 * @see MapItemSavedData#setOrigin
 	 * @param coord The real world coordinate.
 	 * @param scale The scale of the map.
 	 * @return A grid-aligned map center.
 	 */
 	private static int worldCoordToMapCenter(double coord, byte scale) {
 		int size = 128 * (1 << scale);
-		int pos = MathHelper.floor((coord + 64.0D) / (double)size);
+		int pos = Mth.floor((coord + 64.0D) / (double)size);
 		int center = pos * size + size / 2 - 64;
 		return center;
 	}
@@ -202,7 +200,7 @@ public final class MapDataHandler {
 	/**
 	 * Converts a world position to a map icon position.
 	 *
-	 * @see MapData#updateDecorations
+	 * @see MapItemSavedData#addDecoration
 	 * @param coord  The world coordinate.
 	 * @param center The computed center of the map.
 	 * @param scale  The scale of the map.
@@ -226,15 +224,15 @@ public final class MapDataHandler {
 	 * (and in versions < 1.12, the union of them still has 2 abstract methods).
 	 */
 	@FunctionalInterface
-	private static interface FramePredicate extends java.util.function.Predicate<ItemFrameEntity>,
-			com.google.common.base.Predicate<ItemFrameEntity> {
+	private static interface FramePredicate extends java.util.function.Predicate<ItemFrame>,
+			com.google.common.base.Predicate<ItemFrame> {
 		@Override
-		public default boolean apply(ItemFrameEntity frame) {
+		public default boolean apply(ItemFrame frame) {
 			return test(frame);
 		}
 
 		@Override
-		public abstract boolean test(ItemFrameEntity frame);
+		public abstract boolean test(ItemFrame frame);
 	}
 
 	private static boolean isMapWithID(@Nullable ItemStack stack, int mapID) {
@@ -252,7 +250,7 @@ public final class MapDataHandler {
 	}
 
 	public static class MapDataResult {
-		MapDataResult(MapData map, @Nullable Entity confirmedOwner, @Nullable MapDecoration decoration) {
+		MapDataResult(MapItemSavedData map, @Nullable Entity confirmedOwner, @Nullable MapDecoration decoration) {
 			this.map = map;
 			this.confirmedOwner = confirmedOwner;
 			this.decoration = decoration;
@@ -260,7 +258,7 @@ public final class MapDataHandler {
 		/**
 		 * The associated created MapData.
 		 */
-		public final MapData map;
+		public final MapItemSavedData map;
 		/**
 		 * An entity that is known to be holding the map, or null.
 		 */
@@ -295,8 +293,8 @@ public final class MapDataHandler {
 		 */
 		void fixDimension() {
 			if (confirmedOwner != null) {
-				assert confirmedOwner.world != null;
-				IDimensionWrapper dim = VersionedFunctions.getDimension(confirmedOwner.world);
+				assert confirmedOwner.level != null;
+				IDimensionWrapper dim = VersionedFunctions.getDimension(confirmedOwner.level);
 				assert dim != null;
 				VersionedFunctions.setMapDimension(map, dim);
 				this.dim = dim;
@@ -325,27 +323,27 @@ public final class MapDataHandler {
 				xCenter = worldCoordToMapCenter(VersionedFunctions.getEntityX(confirmedOwner), map.scale);
 				zCenter = worldCoordToMapCenter(VersionedFunctions.getEntityZ(confirmedOwner), map.scale);
 
-				map.xCenter = xCenter;
-				map.zCenter = zCenter;
+				map.x = xCenter;
+				map.z = zCenter;
 			}
 		}
 
 		/**
 		 * Makes a string component version of what's known about the result.
 		 */
-		public ITextComponent toComponent() {
+		public Component toComponent() {
 			boolean hasDim = (dim != null);
 			if (hasDim) {
 				if (hasCenter) {
-					return new TranslationTextComponent("wdl.messages.onMapSaved.dimAndCenterKnown", dim, xCenter, zCenter);
+					return new TranslatableComponent("wdl.messages.onMapSaved.dimAndCenterKnown", dim, xCenter, zCenter);
 				} else {
-					return new TranslationTextComponent("wdl.messages.onMapSaved.onlyDimKnown", dim);
+					return new TranslatableComponent("wdl.messages.onMapSaved.onlyDimKnown", dim);
 				}
 			} else {
 				if (hasCenter) {
-					return new TranslationTextComponent("wdl.messages.onMapSaved.onlyCenterKnown", xCenter, zCenter);
+					return new TranslatableComponent("wdl.messages.onMapSaved.onlyCenterKnown", xCenter, zCenter);
 				} else {
-					return new TranslationTextComponent("wdl.messages.onMapSaved.neitherKnown");
+					return new TranslatableComponent("wdl.messages.onMapSaved.neitherKnown");
 				}
 			}
 		}

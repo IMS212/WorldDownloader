@@ -13,11 +13,11 @@
  */
 package wdl.api;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 /**
  * Something that can edit tile entities as they are being saved.
@@ -27,7 +27,7 @@ public interface ITileEntityEditor extends IWDLMod {
 	 * Should the given tile entity be edited by this {@link ITileEntityEditor}?
 	 *
 	 * To get the type of the entity, look at the "id" String tag. See
-	 * {@link TileEntity}'s static initializer block for a list of tile entity
+	 * {@link BlockEntity}'s static initializer block for a list of tile entity
 	 * ids.
 	 *
 	 * Example:
@@ -51,7 +51,7 @@ public interface ITileEntityEditor extends IWDLMod {
 	 *            How the tile entity was created.
 	 * @return Whether it should be edited.
 	 */
-	public abstract boolean shouldEdit(BlockPos pos, CompoundNBT compound,
+	public abstract boolean shouldEdit(BlockPos pos, CompoundTag compound,
 			TileEntityCreationMode creationMode);
 
 	/**
@@ -65,7 +65,7 @@ public interface ITileEntityEditor extends IWDLMod {
 	 * {@link NBTTagCompound}, you can serialize and deserialize it:
 	 *
 	 * <pre>
-	 * {@link TileEntity} te = {@link TileEntity#readFromNBT(NBTTagCompound) TileEntity.readFromNBT(compound)};
+	 * {@link BlockEntity} te = {@link BlockEntity#readFromNBT(NBTTagCompound) TileEntity.readFromNBT(compound)};
 	 *
 	 * if (te instanceof {@link TileEntityDispenser}) {
 	 *     TileEntityDispenser dispenser = (TileEntityDispenser)te;
@@ -74,7 +74,7 @@ public interface ITileEntityEditor extends IWDLMod {
 	 *         dispenser.{@link TileEntityDispenser#setInventorySlotContents(int, net.minecraft.item.ItemStack) setInventorySlotContents}(i, new {@link ItemStack}({@link Blocks#tnt}, 64));
 	 *     }
 	 *
-	 *     dispenser.{@link TileEntity#writeToNBT(NBTTagCompound) writeToNBT(compound)};
+	 *     dispenser.{@link BlockEntity#writeToNBT(NBTTagCompound) writeToNBT(compound)};
 	 * }
 	 * </pre>
 	 *
@@ -85,7 +85,7 @@ public interface ITileEntityEditor extends IWDLMod {
 	 * @param creationMode
 	 *            How the tile entity was created.
 	 */
-	public abstract void editTileEntity(BlockPos pos, CompoundNBT compound,
+	public abstract void editTileEntity(BlockPos pos, CompoundTag compound,
 			TileEntityCreationMode creationMode);
 
 	/**

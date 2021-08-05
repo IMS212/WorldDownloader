@@ -18,11 +18,11 @@ import java.util.function.BiConsumer;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.minecraft.block.Block;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import wdl.handler.BaseHandler;
 import wdl.handler.HandlerException;
 import wdl.versioned.VersionedFunctions;
@@ -34,7 +34,7 @@ import wdl.versioned.VersionedFunctions;
  * @param <B> The type of block to handle.
  * @param <E> The type of block entity to handle.
  */
-public abstract class BlockActionHandler<B extends Block, E extends TileEntity> extends BaseHandler {
+public abstract class BlockActionHandler<B extends Block, E extends BlockEntity> extends BaseHandler {
 	/**
 	 * Constructor.
 	 *
@@ -83,9 +83,9 @@ public abstract class BlockActionHandler<B extends Block, E extends TileEntity> 
 	 * @throws ClassCastException
 	 *             If block or blockEntity are not instances of the handled class.
 	 */
-	public final ITextComponent handleCasting(BlockPos pos, Block block,
-			TileEntity blockEntity, int data1, int data2, IBlockReader world,
-			BiConsumer<BlockPos, E> saveMethod) throws HandlerException, ClassCastException {
+	public final Component handleCasting(BlockPos pos, Block block,
+										 BlockEntity blockEntity, int data1, int data2, BlockGetter world,
+										 BiConsumer<BlockPos, E> saveMethod) throws HandlerException, ClassCastException {
 		B b = blockClass.cast(block);
 		E e = blockEntityClass.cast(blockEntity);
 		return handle(pos, b, e, data1, data2, world, saveMethod);
@@ -112,8 +112,8 @@ public abstract class BlockActionHandler<B extends Block, E extends TileEntity> 
 	 * @throws HandlerException
 	 *             When something is handled wrong.
 	 */
-	public abstract ITextComponent handle(BlockPos pos, B block,
-			E blockEntity, int data1, int data2, IBlockReader world,
+	public abstract Component handle(BlockPos pos, B block,
+			E blockEntity, int data1, int data2, BlockGetter world,
 			BiConsumer<BlockPos, E> saveMethod) throws HandlerException;
 
 	/**
@@ -126,7 +126,7 @@ public abstract class BlockActionHandler<B extends Block, E extends TileEntity> 
 	 */
 	@SuppressWarnings("unchecked")
 	@Nullable
-	public static <B extends Block, E extends TileEntity> BlockActionHandler<B, E> getHandler(Class<B> blockClass, Class<E> blockEntityClass) {
+	public static <B extends Block, E extends BlockEntity> BlockActionHandler<B, E> getHandler(Class<B> blockClass, Class<E> blockEntityClass) {
 		for (BlockActionHandler<?, ?> h : VersionedFunctions.BLOCK_ACTION_HANDLERS) {
 			if (h.getBlockEntityClass().equals(blockEntityClass) &&
 					h.getBlockClass().equals(blockClass)) {

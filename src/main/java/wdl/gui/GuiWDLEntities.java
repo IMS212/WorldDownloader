@@ -22,9 +22,9 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Multimap;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.EntityUtils;
 import wdl.WDL;
 import wdl.WDLMessageTypes;
@@ -57,12 +57,12 @@ public class GuiWDLEntities extends WDLScreen {
 		private int totalWidth;
 
 		{
-			List<Entry> entries = this.getEntries();
+			List<wdl.gui.GuiWDLEntities.GuiEntityList.Entry> entries = this.getEntries();
 			try {
 				Multimap<String, String> entities = EntityUtils
 						.getEntitiesByGroup();
 				largestWidth = entities.values().stream()
-						.mapToInt(font::getStringWidth)
+						.mapToInt(font::width)
 						.max().orElse(0);
 				totalWidth = largestWidth + 255;
 
@@ -93,19 +93,19 @@ public class GuiWDLEntities extends WDLScreen {
 				WDLMessages.chatMessageTranslated(WDL.serverProps,
 						WDLMessageTypes.ERROR, "wdl.messages.generalError.failedToSetUpEntityUI", e);
 
-				Minecraft.getInstance().displayGuiScreen(null);
+				Minecraft.getInstance().setScreen(null);
 			}
 		}
 
 		/** Needed for proper generics behavior, unfortunately. */
-		private abstract class Entry extends GuiListEntry<Entry> { }
+		private abstract class Entry extends GuiListEntry<wdl.gui.GuiWDLEntities.GuiEntityList.Entry> { }
 
 		/**
 		 * Provides a label.
 		 *
 		 * Based off of something.
 		 */
-		private class CategoryEntry extends Entry {
+		private class CategoryEntry extends wdl.gui.GuiWDLEntities.GuiEntityList.Entry {
 			private final String displayGroup;
 			private final int labelWidth;
 
@@ -115,7 +115,7 @@ public class GuiWDLEntities extends WDLScreen {
 
 			public CategoryEntry(String group) {
 				this.displayGroup = EntityUtils.getDisplayGroup(group);
-				this.labelWidth = minecraft.fontRenderer.getStringWidth(displayGroup);
+				this.labelWidth = minecraft.font.width(displayGroup);
 
 				this.groupEnabled = config.isEntityGroupEnabled(group);
 
@@ -135,7 +135,7 @@ public class GuiWDLEntities extends WDLScreen {
 				super.drawEntry(x, y, width, height, mouseX, mouseY);
 				drawString(font, this.displayGroup, (x + 110 / 2)
 						- (this.labelWidth / 2), y + height
-						- minecraft.fontRenderer.FONT_HEIGHT - 1, 0xFFFFFF);
+						- minecraft.font.lineHeight - 1, 0xFFFFFF);
 			}
 
 			boolean isGroupEnabled() {
@@ -145,11 +145,11 @@ public class GuiWDLEntities extends WDLScreen {
 			/**
 			 * Gets the text for the on/off button.
 			 */
-			private ITextComponent getButtonText() {
+			private Component getButtonText() {
 				if (groupEnabled) {
-					return new TranslationTextComponent("wdl.gui.entities.group.enabled");
+					return new TranslatableComponent("wdl.gui.entities.group.enabled");
 				} else {
-					return new TranslationTextComponent("wdl.gui.entities.group.disabled");
+					return new TranslatableComponent("wdl.gui.entities.group.disabled");
 				}
 			}
 		}
@@ -159,7 +159,7 @@ public class GuiWDLEntities extends WDLScreen {
 		 *
 		 * Based off of something.
 		 */
-		private class EntityEntry extends Entry {
+		private class EntityEntry extends wdl.gui.GuiWDLEntities.GuiEntityList.Entry {
 			private final CategoryEntry category;
 			private final String entity;
 			private final String displayEntity;
@@ -219,7 +219,7 @@ public class GuiWDLEntities extends WDLScreen {
 				super.drawEntry(x, y, width, height, mouseX, mouseY);
 
 				drawString(font, this.displayEntity,
-						x, y + height / 2 - minecraft.fontRenderer.FONT_HEIGHT / 2, 0xFFFFFF);
+						x, y + height / 2 - minecraft.font.lineHeight / 2, 0xFFFFFF);
 			}
 
 			@Override
@@ -235,11 +235,11 @@ public class GuiWDLEntities extends WDLScreen {
 			/**
 			 * Gets the text for the on/off button.
 			 */
-			private ITextComponent getButtonText() {
+			private Component getButtonText() {
 				if (category.isGroupEnabled() && entityEnabled) {
-					return new TranslationTextComponent("wdl.gui.entities.entity.included");
+					return new TranslatableComponent("wdl.gui.entities.entity.included");
 				} else {
-					return new TranslationTextComponent("wdl.gui.entities.entity.ignored");
+					return new TranslatableComponent("wdl.gui.entities.entity.ignored");
 				}
 			}
 		}
@@ -251,8 +251,8 @@ public class GuiWDLEntities extends WDLScreen {
 		}
 
 		@Override
-		public List<Entry> getEntries() {
-			return this.getEventListeners();
+		public List<wdl.gui.GuiWDLEntities.GuiEntityList.Entry> getEntries() {
+			return this.children();
 		}
 
 		@Override
@@ -290,7 +290,7 @@ public class GuiWDLEntities extends WDLScreen {
 			}
 		});
 		presetsButton = this.addButton(new ButtonDisplayGui(this.width / 2 + 5, 18, 150, 20,
-				new TranslationTextComponent("wdl.gui.entities.rangePresets"),
+				new TranslatableComponent("wdl.gui.entities.rangePresets"),
 				() -> new GuiWDLEntityRangePresets(this, wdl, config)));
 
 		this.presetsButton.setEnabled(this.canEditRanges());

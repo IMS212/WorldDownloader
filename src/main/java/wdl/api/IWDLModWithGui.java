@@ -13,7 +13,7 @@
  */
 package wdl.api;
 
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screens.Screen;
 
 /**
  * {@link IWDLMod} that has an associated GUI that should be opened.

@@ -13,8 +13,8 @@
  */
 package wdl.api;
 
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.nbt.CompoundTag;
 
 /**
  * {@link IWDLMod} that edits the player info NBT file.
@@ -31,6 +31,6 @@ public interface IPlayerInfoEditor extends IWDLMod {
 	 *            The current {@link NBTTagCompound} that is being saved. Edit
 	 *            or add info to this.
 	 */
-	public abstract void editPlayerInfo(ClientPlayerEntity player,
-			Object saveHandler, CompoundNBT tag);
+	public abstract void editPlayerInfo(LocalPlayer player,
+			Object saveHandler, CompoundTag tag);
 }

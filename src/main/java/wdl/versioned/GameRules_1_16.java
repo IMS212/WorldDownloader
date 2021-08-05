@@ -20,7 +20,18 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-
+import net.minecraft.commands.CommandSource;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.GameRules.GameRuleTypeVisitor;
+import net.minecraft.world.level.GameRules.Key;
+import net.minecraft.world.level.GameRules.Type;
+import net.minecraft.world.level.GameRules.Value;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,19 +39,6 @@ import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.serialization.Dynamic;
-
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.ICommandSource;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTDynamicOps;
-import net.minecraft.util.math.vector.Vector2f;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.GameRules.IRuleEntryVisitor;
-import net.minecraft.world.GameRules.RuleKey;
-import net.minecraft.world.GameRules.RuleType;
-import net.minecraft.world.GameRules.RuleValue;
 import wdl.versioned.VersionedFunctions.GameRuleType;
 
 /**
@@ -50,15 +48,15 @@ import wdl.versioned.VersionedFunctions.GameRuleType;
 final class GameRuleFunctions {
 	private GameRuleFunctions() { throw new AssertionError(); }
 	private static final Logger LOGGER = LogManager.getLogger();
-	private static final CommandSource DUMMY_COMMAND_SOURCE =
-			new CommandSource(ICommandSource.DUMMY, Vector3d.ZERO, Vector2f.ZERO, null, 0, "", new StringTextComponent(""), null, null);
+	private static final CommandSourceStack DUMMY_COMMAND_SOURCE =
+			new CommandSourceStack(CommandSource.NULL, Vec3.ZERO, Vec2.ZERO, null, 0, "", new TextComponent(""), null, null);
 
-	private static class RuleInfo<T extends GameRules.RuleValue<T>> {
-		public RuleInfo(RuleKey<T> key, RuleType<T> type) {
+	private static class RuleInfo<T extends GameRules.Value<T>> {
+		public RuleInfo(Key<T> key, Type<T> type) {
 			this.key = key;
 			this.type = type;
 			this.commandNode = this.type.createArgument("value").build();
-			T defaultValue = type.createValue();
+			T defaultValue = type.createRule();
 			if (defaultValue instanceof GameRules.BooleanValue) {
 				this.wdlType = GameRuleType.BOOLEAN;
 			} else if (defaultValue instanceof GameRules.IntegerValue) {
@@ -68,19 +66,19 @@ final class GameRuleFunctions {
 				this.wdlType = null;
 			}
 		}
-		public final GameRules.RuleKey<T> key;
-		public final GameRules.RuleType<T> type;
+		public final GameRules.Key<T> key;
+		public final GameRules.Type<T> type;
 		@Nullable
 		public final GameRuleType wdlType;
-		private final CommandNode<CommandSource> commandNode;
+		private final CommandNode<CommandSourceStack> commandNode;
 
 		// I'm not particularly happy about the lack of a public generalized string set method...
 		public void set(GameRules rules, String value) {
 			try {
-				CommandContextBuilder<CommandSource> ctxBuilder = new CommandContextBuilder<>(null, DUMMY_COMMAND_SOURCE, null, 0);
+				CommandContextBuilder<CommandSourceStack> ctxBuilder = new CommandContextBuilder<>(null, DUMMY_COMMAND_SOURCE, null, 0);
 				StringReader reader = new StringReader(value);
 				this.commandNode.parse(reader, ctxBuilder);
-				rules.get(this.key).updateValue(ctxBuilder.build(value), "value");
+				rules.getRule(this.key).setFromArgument(ctxBuilder.build(value), "value");
 			} catch (Exception ex) {
 				LOGGER.error("[WDL] Failed to set rule {} to {}", key, value, ex);
 				throw new IllegalArgumentException("Failed to set rule " + key + " to " + value, ex);
@@ -90,10 +88,10 @@ final class GameRuleFunctions {
 	private static final Map<String, RuleInfo<?>> RULES;
 	static {
 		RULES = new TreeMap<>();
-		GameRules.visitAll(new IRuleEntryVisitor() {
+		GameRules.visitGameRuleTypes(new GameRuleTypeVisitor() {
 			@Override
-			public <T extends RuleValue<T>> void visit(RuleKey<T> key, RuleType<T> type) {
-				RULES.put(key.getName(), new RuleInfo<>(key, type));
+			public <T extends Value<T>> void visit(Key<T> key, Type<T> type) {
+				RULES.put(key.getId(), new RuleInfo<>(key, type));
 			}
 		});
 	}
@@ -116,7 +114,7 @@ final class GameRuleFunctions {
 	@Nullable
 	static String getRuleValue(GameRules rules, String rule) { 
 		if (RULES.containsKey(rule)) {
-			return rules.get(RULES.get(rule).key).toString();
+			return rules.getRule(RULES.get(rule).key).toString();
 		} else {
 			return null;
 		}
@@ -150,7 +148,7 @@ final class GameRuleFunctions {
 	/* (non-javadoc)
 	 * @see VersionedFunctions#loadGameRules
 	 */
-	static GameRules loadGameRules(CompoundNBT tag) {
-		return new GameRules(new Dynamic<>(NBTDynamicOps.INSTANCE, tag));
+	static GameRules loadGameRules(CompoundTag tag) {
+		return new GameRules(new Dynamic<>(NbtOps.INSTANCE, tag));
 	}
 }

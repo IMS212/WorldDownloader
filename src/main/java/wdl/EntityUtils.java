@@ -21,16 +21,14 @@ import java.util.Set;
 import javax.annotation.CheckForSigned;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.entity.player.Player;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.effect.LightningBoltEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import wdl.api.IEntityManager;
 import wdl.api.WDLApi;
 import wdl.api.WDLApi.ModInfo;
@@ -226,7 +224,7 @@ public class EntityUtils {
 	 */
 	@Nullable
 	public static String getEntityType(@Nonnull Entity e) {
-		if (e instanceof PlayerEntity || e instanceof LightningBoltEntity) {
+		if (e instanceof Player || e instanceof LightningBolt) {
 			// These entities can't be saved at all; it's normal that they won't
 			// be classified.
 			return null;

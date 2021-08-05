@@ -17,12 +17,10 @@ import static wdl.config.settings.Utils.*;
 
 import java.util.Map;
 import java.util.function.BooleanSupplier;
-
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.util.StringRepresentable;
 import com.google.common.annotations.VisibleForTesting;
-
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import wdl.WDLPluginChannels;
 import wdl.config.CyclableSetting;
 import wdl.config.IConfiguration;
@@ -40,7 +38,7 @@ public final class EntitySettings {
 	@VisibleForTesting
 	static BooleanSupplier hasServerEntityRange = WDLPluginChannels::hasServerEntityRange;
 
-	public enum TrackDistanceMode implements IStringSerializable {
+	public enum TrackDistanceMode implements StringRepresentable {
 		DEFAULT("default"),
 		SERVER("server"), // Only available in certain contexts
 		USER("user");
@@ -57,7 +55,7 @@ public final class EntitySettings {
 		}
 
 		@Override
-		public String getString() {
+		public String getSerializedName() {
 			return confName;
 		}
 	}
@@ -78,7 +76,7 @@ public final class EntitySettings {
 
 		@Override
 		public String serializeToString(TrackDistanceMode value) {
-			return value.getString();
+			return value.getSerializedName();
 		}
 
 		@Override
@@ -111,13 +109,13 @@ public final class EntitySettings {
 		}
 
 		@Override
-		public ITextComponent getDescription() {
-			return new TranslationTextComponent(key + ".description");
+		public Component getDescription() {
+			return new TranslatableComponent(key + ".description");
 		}
 
 		@Override
-		public ITextComponent getButtonText(TrackDistanceMode curValue) {
-			return new TranslationTextComponent(key + "." + serializeToString(curValue));
+		public Component getButtonText(TrackDistanceMode curValue) {
+			return new TranslatableComponent(key + "." + serializeToString(curValue));
 		}
 	}
 }

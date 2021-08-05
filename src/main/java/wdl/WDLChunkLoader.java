@@ -23,23 +23,21 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.util.ClassInstanceMultiMap;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.storage.ChunkStorage;
+import net.minecraft.world.level.chunk.storage.RegionFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ClassInheritanceMultiMap;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.storage.ChunkLoader;
-import net.minecraft.world.chunk.storage.RegionFile;
 import wdl.api.IEntityEditor;
 import wdl.api.ITileEntityEditor;
 import wdl.api.ITileEntityEditor.TileEntityCreationMode;
@@ -51,7 +49,7 @@ import wdl.versioned.ISaveHandlerWrapper;
 import wdl.versioned.VersionedFunctions;
 
 /**
- * Alternative implementation of {@link ChunkLoader} that handles editing
+ * Alternative implementation of {@link ChunkStorage} that handles editing
  * WDL-specific properties of chunks as they are being saved.
  *
  * Extends the class in either WDLChunkLoader12.java or WDLChunkLoader13.java,
@@ -75,8 +73,8 @@ public class WDLChunkLoader extends WDLChunkLoaderBase {
      * @return
      */
     @Override
-    protected ListNBT getEntityList(Chunk chunk) {
-        ListNBT entityList = new ListNBT();
+    protected ListTag getEntityList(LevelChunk chunk) {
+        ListTag entityList = new ListTag();
 
         if (!WDLPluginChannels.canSaveEntities(chunk)) {
             return entityList;
@@ -85,15 +83,15 @@ public class WDLChunkLoader extends WDLChunkLoaderBase {
         // Build a list of all entities in the chunk.
         List<Entity> entities = new ArrayList<>();
         // Add the entities already in the chunk.
-        for (ClassInheritanceMultiMap<Entity> map : chunk.getEntityLists()) {
+        for (ClassInstanceMultiMap<Entity> map : chunk.getEntitySections()) {
             entities.addAll(map);
         }
         // Add the manually saved entities.
         for (Entity e : wdl.newEntities.get(chunk.getPos())) {
-            assert chunk.getPos().equals(wdl.entityPositions.get(e.getUniqueID())) :
+            assert chunk.getPos().equals(wdl.entityPositions.get(e.getUUID())) :
                     "Mismatch between position of " + e + " in "
                             + chunk.getPos() + " and position recorded in entityPositions of "
-                            + wdl.entityPositions.get(e.getUniqueID());
+                            + wdl.entityPositions.get(e.getUUID());
             // "Unkill" the entity, since it is killed when it is unloaded.
             e.removed = false;
             entities.add(e);
@@ -125,11 +123,11 @@ public class WDLChunkLoader extends WDLChunkLoaderBase {
                 }
             }
 
-            CompoundNBT entityData = new CompoundNBT();
+            CompoundTag entityData = new CompoundTag();
 
             try {
-                if (entity.writeUnlessPassenger(entityData)) {
-                    chunk.setHasEntities(true);
+                if (entity.save(entityData)) {
+                    chunk.setLastSaveHadEntities(true);
                     entityList.add(entityData);
                 }
             } catch (Exception e) {
@@ -140,13 +138,13 @@ public class WDLChunkLoader extends WDLChunkLoaderBase {
                 LOGGER.warn("Compound: " + entityData);
                 LOGGER.warn("Entity metadata dump:");
                 try {
-                    List<EntityDataManager.DataEntry<?>> objects = entity
-                            .getDataManager().getAll();
+                    List<SynchedEntityData.DataItem<?>> objects = entity
+                            .getEntityData().getAll();
                     if (objects == null) {
                         LOGGER.warn("No entries (getAllWatched() returned null)");
                     } else {
                         LOGGER.warn(objects);
-                        for (EntityDataManager.DataEntry<?> obj : objects) {
+                        for (SynchedEntityData.DataItem<?> obj : objects) {
                             if (obj != null) {
                                 LOGGER.warn("DataEntry [getValue()="
                                         + obj.getValue()
@@ -155,9 +153,9 @@ public class WDLChunkLoader extends WDLChunkLoaderBase {
                                         + ", getKey()="
                                         + "DataParameter ["
                                         + "getId()="
-                                        + obj.getKey().getId()
+                                        + obj.getAccessor().getId()
                                         + ", getSerializer()="
-                                        + obj.getKey().getSerializer() + "]]");
+                                        + obj.getAccessor().getSerializer() + "]]");
                             }
                         }
                     }
@@ -181,7 +179,7 @@ public class WDLChunkLoader extends WDLChunkLoaderBase {
      * @return True if the entity should be saved.
      */
     protected static boolean shouldSaveEntity(Entity e) {
-        if (e instanceof PlayerEntity) {
+        if (e instanceof Player) {
             // Players shouldn't be saved, and it's dangerous to mess with them.
             return false;
         }
@@ -202,16 +200,16 @@ public class WDLChunkLoader extends WDLChunkLoaderBase {
      * entities as needed.
      */
     @Override
-    protected ListNBT getTileEntityList(Chunk chunk) {
-        ListNBT tileEntityList = new ListNBT();
+    protected ListTag getTileEntityList(LevelChunk chunk) {
+        ListTag tileEntityList = new ListTag();
 
         if (!WDLPluginChannels.canSaveTileEntities(chunk)) {
             return tileEntityList;
         }
 
-        Map<BlockPos, TileEntity> chunkTEMap = chunk.getTileEntityMap();
-        Map<BlockPos, CompoundNBT> oldTEMap = getOldTileEntities(chunk);
-        Map<BlockPos, TileEntity> newTEMap = wdl.newTileEntities.get(chunk.getPos());
+        Map<BlockPos, BlockEntity> chunkTEMap = chunk.getBlockEntities();
+        Map<BlockPos, CompoundTag> oldTEMap = getOldTileEntities(chunk);
+        Map<BlockPos, BlockEntity> newTEMap = wdl.newTileEntities.get(chunk.getPos());
         if (newTEMap == null) {
             newTEMap = new HashMap<>();
         }
@@ -226,11 +224,11 @@ public class WDLChunkLoader extends WDLChunkLoaderBase {
             // Now, add all of the tile entities, using the "best" map
             // if it's in multiple.
             if (newTEMap.containsKey(pos)) {
-                CompoundNBT compound = new CompoundNBT();
+                CompoundTag compound = new CompoundTag();
 
-                TileEntity te = newTEMap.get(pos);
+                BlockEntity te = newTEMap.get(pos);
                 try {
-                    te.write(compound);
+                    te.save(compound);
                 } catch (Exception e) {
                     WDLMessages.chatMessageTranslated(
                             WDL.serverProps,
@@ -251,7 +249,7 @@ public class WDLChunkLoader extends WDLChunkLoaderBase {
 
                 tileEntityList.add(compound);
             } else if (oldTEMap.containsKey(pos)) {
-                CompoundNBT compound = oldTEMap.get(pos);
+                CompoundTag compound = oldTEMap.get(pos);
                 String entityType = compound.getString("id");
                 WDLMessages.chatMessageTranslated(
                         WDL.serverProps,
@@ -264,10 +262,10 @@ public class WDLChunkLoader extends WDLChunkLoaderBase {
             } else if (chunkTEMap.containsKey(pos)) {
                 // TODO: Do we want a chat message for this?
                 // It seems unnecessary.
-                TileEntity te = chunkTEMap.get(pos);
-                CompoundNBT compound = new CompoundNBT();
+                BlockEntity te = chunkTEMap.get(pos);
+                CompoundTag compound = new CompoundTag();
                 try {
-                    te.write(compound);
+                    te.save(compound);
                 } catch (Exception e) {
                     WDLMessages.chatMessageTranslated(
                             WDL.serverProps,
@@ -292,32 +290,32 @@ public class WDLChunkLoader extends WDLChunkLoaderBase {
      * be imported, and the tile entity must be in the correct position (IE, the
      * block at the tile entity's position must match the block normally used
      * with that tile entity). See
-     * {@link #shouldImportBlockEntity(String, BlockPos, Block, CompoundNBT, Chunk)} for details.
+     * {@link #shouldImportBlockEntity(String, BlockPos, Block, CompoundTag, LevelChunk)} for details.
      *
      * @param chunk
      *            The chunk that currently exists in that location
      * @return A map of positions to tile entities.
      */
-    protected Map<BlockPos, CompoundNBT> getOldTileEntities(Chunk chunk) {
-        Map<BlockPos, CompoundNBT> returned = new HashMap<>();
+    protected Map<BlockPos, CompoundTag> getOldTileEntities(LevelChunk chunk) {
+        Map<BlockPos, CompoundTag> returned = new HashMap<>();
 
         try {
-            CompoundNBT chunkNBT;
+            CompoundTag chunkNBT;
 
             // XXX The cache is gone now (along with MC-119971), right?
-            chunkNBT = this.readChunk(chunk.getPos());
+            chunkNBT = this.read(chunk.getPos());
             if (chunkNBT == null) {
                 // This happens whenever the chunk hasn't been saved before.
                 // It's a normal case.
                 return returned;
             }
 
-            CompoundNBT levelNBT = chunkNBT.getCompound("Level");
-            ListNBT oldList = levelNBT.getList("TileEntities", 10);
+            CompoundTag levelNBT = chunkNBT.getCompound("Level");
+            ListTag oldList = levelNBT.getList("TileEntities", 10);
 
             if (oldList != null) {
                 for (int i = 0; i < oldList.size(); i++) {
-                    CompoundNBT oldNBT = oldList.getCompound(i);
+                    CompoundTag oldNBT = oldList.getCompound(i);
 
                     String entityID = oldNBT.getString("id");
                     BlockPos pos = new BlockPos(oldNBT.getInt("x"),
@@ -367,7 +365,7 @@ public class WDLChunkLoader extends WDLChunkLoaderBase {
      * @return <code>true</code> if that block entity should be imported.
      */
     protected boolean shouldImportBlockEntity(String entityID, BlockPos pos,
-                                              Block block, CompoundNBT blockEntityNBT, Chunk chunk) {
+                                              Block block, CompoundTag blockEntityNBT, LevelChunk chunk) {
         if (VersionedFunctions.shouldImportBlockEntity(entityID, pos, block, blockEntityNBT, chunk)) {
             return true;
         }
@@ -386,7 +384,7 @@ public class WDLChunkLoader extends WDLChunkLoaderBase {
     /**
      * Applies all registered {@link ITileEntityEditor}s to the given tile entity.
      */
-    protected static void editTileEntity(BlockPos pos, CompoundNBT compound,
+    protected static void editTileEntity(BlockPos pos, CompoundTag compound,
                                          TileEntityCreationMode creationMode) {
         for (ModInfo<ITileEntityEditor> info : WDLApi
                 .getImplementingExtensions(ITileEntityEditor.class)) {

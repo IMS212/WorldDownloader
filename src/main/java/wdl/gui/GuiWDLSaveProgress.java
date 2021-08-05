@@ -14,12 +14,11 @@
 package wdl.gui;
 
 import java.util.function.Supplier;
-
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import wdl.WDL;
 
 /**
@@ -55,7 +54,7 @@ public class GuiWDLSaveProgress extends GuiTurningCameraBase {
 	 * @param title The title.
 	 * @param taskCount The total number of major tasks that there will be.
 	 */
-	public GuiWDLSaveProgress(WDL wdl, ITextComponent title, int taskCount) {
+	public GuiWDLSaveProgress(WDL wdl, Component title, int taskCount) {
 		super(wdl, title);
 		this.majorTaskCount = taskCount;
 		this.majorTaskNumber = 0;
@@ -153,19 +152,19 @@ public class GuiWDLSaveProgress extends GuiTurningCameraBase {
 		this.renderBackground();
 
 		if (this.doneWorking) {
-			this.minecraft.displayGuiScreen((Screen) null);
+			this.minecraft.setScreen((Screen) null);
 		} else {
 			this.drawBorder(32, 32, 0, 0, height, width);
 
 			String majorTaskInfo = majorTaskMessage;
 			if (majorTaskCount > 1) {
-				majorTaskInfo = I18n.format(
+				majorTaskInfo = I18n.get(
 						"wdl.gui.saveProgress.progressInfo", majorTaskMessage,
 						majorTaskNumber, majorTaskCount);
 			}
 			String minorTaskInfo = minorTaskMessageProvider.get();
 			if (minorTaskMaximum > 1 && includeProgressInMinorTask) {
-				minorTaskInfo = I18n.format(
+				minorTaskInfo = I18n.get(
 						"wdl.gui.saveProgress.progressInfo", minorTaskInfo,
 						minorTaskProgress, minorTaskMaximum);
 			}
@@ -201,9 +200,9 @@ public class GuiWDLSaveProgress extends GuiTurningCameraBase {
 	 *            The progress value of the bar, between 0 and 1
 	 */
 	private void drawProgressBar(int y, int emptyV, int filledV, float progress) {
-		progress = MathHelper.clamp(progress, 0, 1);
+		progress = Mth.clamp(progress, 0, 1);
 
-		this.minecraft.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
+		this.minecraft.getTextureManager().bind(GuiComponent.GUI_ICONS_LOCATION);
 
 		final int height = 5;
 

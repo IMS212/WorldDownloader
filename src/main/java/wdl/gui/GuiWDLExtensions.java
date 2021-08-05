@@ -14,15 +14,14 @@
 package wdl.gui;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.client.audio.SimpleSound;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.sounds.SoundEvents;
 import wdl.api.IWDLModWithGui;
 import wdl.api.WDLApi;
 import wdl.api.WDLApi.ModInfo;
@@ -56,7 +55,7 @@ public class GuiWDLExtensions extends WDLScreen {
 	/**
 	 * Height of the middle section.
 	 *
-	 * Equal to <code>{@link FontRenderer#FONT_HEIGHT} + 10</code>.
+	 * Equal to <code>{@link Font#lineHeight} + 10</code>.
 	 */
 	private static final int MIDDLE_HEIGHT = 19;
 	/**
@@ -89,12 +88,12 @@ public class GuiWDLExtensions extends WDLScreen {
 			public ModEntry(ModInfo<?> mod) {
 				this.mod = mod;
 				String name = mod.getDisplayName();
-				this.modDescription = I18n.format("wdl.gui.extensions.modVersion",
+				this.modDescription = I18n.get("wdl.gui.extensions.modVersion",
 						name, mod.version);
 
 				if (!mod.isEnabled()) {
-					this.label = "" + TextFormatting.GRAY
-							+ TextFormatting.ITALIC + modDescription;
+					this.label = "" + ChatFormatting.GRAY
+							+ ChatFormatting.ITALIC + modDescription;
 				} else {
 					this.label = modDescription;
 				}
@@ -103,11 +102,11 @@ public class GuiWDLExtensions extends WDLScreen {
 					IWDLModWithGui guiMod = (IWDLModWithGui) mod.mod;
 					String buttonName = (guiMod).getButtonName();
 					if (buttonName == null || buttonName.isEmpty()) {
-						buttonName = I18n.format("wdl.gui.extensions.defaultSettingsButtonText");
+						buttonName = I18n.get("wdl.gui.extensions.defaultSettingsButtonText");
 					}
 
 					this.addButton(new WDLButton(0, 0, 80, 20,
-							new StringTextComponent(guiMod.getButtonName())) {
+							new TextComponent(guiMod.getButtonName())) {
 						public @Override void performAction() {
 							if (mod.mod instanceof IWDLModWithGui) {
 								((IWDLModWithGui) mod.mod).openGui(GuiWDLExtensions.this);
@@ -117,17 +116,17 @@ public class GuiWDLExtensions extends WDLScreen {
 				}
 
 				this.addButton(new WDLButton(0, 0, 80, 20,
-						new TranslationTextComponent("wdl.gui.extensions."
+						new TranslatableComponent("wdl.gui.extensions."
 								+ (mod.isEnabled() ? "enabled" : "disabled"))) {
 					public @Override void performAction() {
 						mod.toggleEnabled();
 
-						this.setMessage(new TranslationTextComponent("wdl.gui.extensions."
+						this.setMessage(new TranslatableComponent("wdl.gui.extensions."
 								+ (mod.isEnabled() ? "enabled" : "disabled")));
 
 						if (!mod.isEnabled()) {
-							label = "" + TextFormatting.GRAY
-									+ TextFormatting.ITALIC + modDescription;
+							label = "" + ChatFormatting.GRAY
+									+ ChatFormatting.ITALIC + modDescription;
 						} else {
 							label = modDescription;
 						}
@@ -145,7 +144,7 @@ public class GuiWDLExtensions extends WDLScreen {
 				if (selectedEntry != this) {
 					selectedEntry = this;
 
-					minecraft.getSoundHandler().play(SimpleSound.master(
+					minecraft.getSoundManager().play(SimpleSoundInstance.forUI(
 							SoundEvents.UI_BUTTON_CLICK, 1.0F));
 
 					updateDetailsList(mod);
@@ -160,7 +159,7 @@ public class GuiWDLExtensions extends WDLScreen {
 			public void drawEntry(int x, int y, int width, int height, int mouseX, int mouseY) {
 				super.drawEntry(x, y, width, height, mouseX, mouseY);
 
-				int centerY = y + height / 2 - font.FONT_HEIGHT / 2;
+				int centerY = y + height / 2 - font.lineHeight / 2;
 				drawString(font, label, x, centerY, 0xFFFFFF);
 			}
 
@@ -211,7 +210,7 @@ public class GuiWDLExtensions extends WDLScreen {
 			super.render(mouseX, mouseY, partialTicks);
 
 			drawCenteredString(font,
-					I18n.format("wdl.gui.extensions.detailsCaption"),
+					I18n.get("wdl.gui.extensions.detailsCaption"),
 					GuiWDLExtensions.this.width / 2, bottomLocation + 5, 0xFFFFFF);
 		}
 	}

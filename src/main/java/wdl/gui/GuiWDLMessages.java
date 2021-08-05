@@ -16,13 +16,11 @@ package wdl.gui;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import com.google.common.collect.ListMultimap;
-
-import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import wdl.MessageTypeCategory;
 import wdl.WDL;
 import wdl.WDLMessages;
@@ -41,7 +39,7 @@ public class GuiWDLMessages extends WDLScreen {
 	 * Set from inner classes; this is the text to draw.
 	 */
 	@Nullable
-	private ITextComponent hoveredButtonTooltip = null;
+	private Component hoveredButtonTooltip = null;
 
 	private class GuiMessageTypeList extends GuiList<GuiMessageTypeList.Entry> {
 		public GuiMessageTypeList() {
@@ -51,9 +49,9 @@ public class GuiWDLMessages extends WDLScreen {
 		}
 
 		/** Needed for proper generics behavior, unfortunately. */
-		private abstract class Entry extends GuiListEntry<Entry> { }
+		private abstract class Entry extends GuiListEntry<wdl.gui.GuiWDLMessages.GuiMessageTypeList.Entry> { }
 
-		private class CategoryEntry extends Entry {
+		private class CategoryEntry extends wdl.gui.GuiWDLMessages.GuiMessageTypeList.Entry {
 			private final SettingButton button;
 			private final MessageTypeCategory category;
 
@@ -71,7 +69,7 @@ public class GuiWDLMessages extends WDLScreen {
 
 				drawCenteredString(font, category.getDisplayName().getString(), // XXX this should be formatted
 						GuiWDLMessages.this.width / 2 - 40, y + height
-						- minecraft.fontRenderer.FONT_HEIGHT - 1, 0xFFFFFF);
+						- minecraft.font.lineHeight - 1, 0xFFFFFF);
 
 				if (button.isHovered()) {
 					hoveredButtonTooltip = button.getTooltip();
@@ -79,7 +77,7 @@ public class GuiWDLMessages extends WDLScreen {
 			}
 		}
 
-		private class MessageTypeEntry extends Entry {
+		private class MessageTypeEntry extends wdl.gui.GuiWDLMessages.GuiMessageTypeList.Entry {
 			private final SettingButton button;
 			private final MessageRegistration typeRegistration;
 
@@ -137,10 +135,10 @@ public class GuiWDLMessages extends WDLScreen {
 				(this.width / 2) - 155, 18, 150, 20));
 		resetButton = this.addButton(new ButtonDisplayGui(
 				(this.width / 2) + 5, 18, 150, 20,
-				new TranslationTextComponent("wdl.gui.messages.reset"),
+				new TranslatableComponent("wdl.gui.messages.reset"),
 				() -> new ConfirmScreen(result -> confirmResult(result, ID_RESET_ALL),
-						new TranslationTextComponent("wdl.gui.messages.reset.confirm.title"),
-						new TranslationTextComponent("wdl.gui.messages.reset.confirm.subtitle"))));
+						new TranslatableComponent("wdl.gui.messages.reset.confirm.title"),
+						new TranslatableComponent("wdl.gui.messages.reset.confirm.subtitle"))));
 
 		this.addList(new GuiMessageTypeList());
 
@@ -163,11 +161,11 @@ public class GuiWDLMessages extends WDLScreen {
 			}
 		}
 
-		minecraft.displayGuiScreen(this);
+		minecraft.setScreen(this);
 	}
 
 	@Override
-	public void onClose() {
+	public void removed() {
 		wdl.saveProps();
 	}
 
@@ -178,13 +176,13 @@ public class GuiWDLMessages extends WDLScreen {
 		this.renderBackground();
 		super.render(mouseX, mouseY, partialTicks);
 
-		ITextComponent tooltip = null;
+		Component tooltip = null;
 		if (hoveredButtonTooltip != null) {
 			tooltip = hoveredButtonTooltip;
 		} else if (enableAllButton.isHovered()) {
 			tooltip = enableAllButton.getTooltip();
 		} else if (resetButton.isHovered()) {
-			tooltip = new TranslationTextComponent("wdl.gui.messages.reset.description");
+			tooltip = new TranslatableComponent("wdl.gui.messages.reset.description");
 		}
 
 		if (tooltip != null) {

@@ -13,13 +13,13 @@
  */
 package wdl.gui.widget;
 
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.chat.Component;
 
 /**
  * A Button class that works across versions.
  */
 public abstract class WDLButton extends ExtButton {
-	public WDLButton(int x, int y, int widthIn, int heightIn, ITextComponent buttonText) {
+	public WDLButton(int x, int y, int widthIn, int heightIn, Component buttonText) {
 		super(x, y, widthIn, heightIn, buttonText);
 	}
 

@@ -16,10 +16,9 @@ package wdl.config.settings;
 import static wdl.config.settings.Utils.*;
 
 import java.util.Map;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.entity.Entity;
 import wdl.config.BooleanSetting;
 import wdl.config.EnumSetting;
 import wdl.config.IConfiguration;
@@ -50,7 +49,7 @@ public final class WorldSettings {
 	public static final IntSetting SPAWN_Y = new IntSetting("SpawnY", 127);
 	public static final IntSetting SPAWN_Z = new IntSetting("SpawnZ", 8);
 
-	public enum GameMode implements IStringSerializable {
+	public enum GameMode implements StringRepresentable {
 		KEEP("keep", -1, false),
 		CREATIVE("creative", 1, false),
 		SURVIVAL("survival", 0, false),
@@ -73,12 +72,12 @@ public final class WorldSettings {
 		}
 
 		@Override
-		public String getString() {
+		public String getSerializedName() {
 			return confName;
 		}
 	}
 
-	public enum Weather implements IStringSerializable {
+	public enum Weather implements StringRepresentable {
 		KEEP("keep", false, -1, false, -1),
 		SUNNY("sunny", false, 0, false, 0),
 		RAIN("rain", true, 24000, false, 0),
@@ -105,25 +104,25 @@ public final class WorldSettings {
 		}
 
 		@Override
-		public String getString() {
+		public String getSerializedName() {
 			return confName;
 		}
 	}
 
-	public enum SpawnMode implements IStringSerializable {
+	public enum SpawnMode implements StringRepresentable {
 		AUTO("auto"),
 		PLAYER("player") {
 			@Override
 			public int getX(Entity player, IConfiguration config) {
-				return MathHelper.floor(VersionedFunctions.getEntityX(player));
+				return Mth.floor(VersionedFunctions.getEntityX(player));
 			}
 			@Override
 			public int getY(Entity player, IConfiguration config) {
-				return MathHelper.floor(VersionedFunctions.getEntityY(player));
+				return Mth.floor(VersionedFunctions.getEntityY(player));
 			}
 			@Override
 			public int getZ(Entity player, IConfiguration config) {
-				return MathHelper.floor(VersionedFunctions.getEntityZ(player));
+				return Mth.floor(VersionedFunctions.getEntityZ(player));
 			}
 		},
 		XYZ("xyz") {
@@ -153,7 +152,7 @@ public final class WorldSettings {
 		}
 
 		@Override
-		public String getString() {
+		public String getSerializedName() {
 			return confName;
 		}
 
@@ -168,7 +167,7 @@ public final class WorldSettings {
 		}
 	}
 
-	public enum Time implements IStringSerializable {
+	public enum Time implements StringRepresentable {
 		KEEP("keep", -1),
 		SUNRISE("23000", 23000),
 		MORNING("0", 0),
@@ -192,13 +191,13 @@ public final class WorldSettings {
 		}
 
 		@Override
-		public String getString() {
+		public String getSerializedName() {
 			return confName;
 		}
 	}
 
 	// Refer to net.minecraft.world.Difficulty or net.minecraft.world.EnumDifficulty
-	public enum Difficulty implements IStringSerializable {
+	public enum Difficulty implements StringRepresentable {
 		KEEP("keep", -1, false),
 		PEACEFUL("peaceful", 0, false),
 		EASY("easy", 1, false),
@@ -223,7 +222,7 @@ public final class WorldSettings {
 		}
 
 		@Override
-		public String getString() {
+		public String getSerializedName() {
 			return confName;
 		}
 	}

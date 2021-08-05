@@ -41,10 +41,10 @@ import com.google.common.io.ByteStreams;
 import com.google.gson.JsonObject;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.network.play.ClientPlayNetHandler;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.client.CCustomPayloadPacket;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
+import net.minecraft.world.level.chunk.LevelChunk;
 import wdl.versioned.VersionedFunctions;
 import wdl.versioned.VersionedFunctions.ChannelName;
 
@@ -218,7 +218,7 @@ public class WDLPluginChannels {
 	 * Checks if a chunk is within the saveRadius
 	 * (and chunk caching is disabled).
 	 */
-	public static boolean canSaveChunk(Chunk chunk) {
+	public static boolean canSaveChunk(LevelChunk chunk) {
 		if (isChunkOverridden(chunk)) {
 			return true;
 		}
@@ -229,8 +229,8 @@ public class WDLPluginChannels {
 
 		if (receivedPackets.contains(1)) {
 			if (!canCacheChunks && saveRadius >= 0) {
-				int distanceX = chunk.getPos().x - WDL.getInstance().player.chunkCoordX;
-				int distanceZ = chunk.getPos().z - WDL.getInstance().player.chunkCoordZ;
+				int distanceX = chunk.getPos().x - WDL.getInstance().player.xChunk;
+				int distanceZ = chunk.getPos().z - WDL.getInstance().player.zChunk;
 
 				if (Math.abs(distanceX) > saveRadius ||
 						Math.abs(distanceZ) > saveRadius) {
@@ -262,7 +262,7 @@ public class WDLPluginChannels {
 	/**
 	 * Checks whether entities are allowed to be saved in the given chunk.
 	 */
-	public static boolean canSaveEntities(Chunk chunk) {
+	public static boolean canSaveEntities(LevelChunk chunk) {
 		if (isChunkOverridden(chunk)) {
 			return true;
 		}
@@ -299,7 +299,7 @@ public class WDLPluginChannels {
 	/**
 	 * Checks whether a player can save tile entities in the given chunk.
 	 */
-	public static boolean canSaveTileEntities(Chunk chunk) {
+	public static boolean canSaveTileEntities(LevelChunk chunk) {
 		if (isChunkOverridden(chunk)) {
 			return true;
 		}
@@ -338,7 +338,7 @@ public class WDLPluginChannels {
 	/**
 	 * Checks whether containers (such as chests) can be saved.
 	 */
-	public static boolean canSaveContainers(Chunk chunk) {
+	public static boolean canSaveContainers(LevelChunk chunk) {
 		if (isChunkOverridden(chunk)) {
 			return true;
 		}
@@ -397,7 +397,7 @@ public class WDLPluginChannels {
 	/**
 	 * Gets the save radius.
 	 *
-	 * Note that using {@link #canSaveChunk(Chunk)} is generally better
+	 * Note that using {@link #canSaveChunk(LevelChunk)} is generally better
 	 * as it handles most of the radius logic.
 	 *
 	 * @return {@link #saveRadius}.
@@ -409,7 +409,7 @@ public class WDLPluginChannels {
 	/**
 	 * Gets whether chunks can be cached.
 	 *
-	 * Note that using {@link #canSaveChunk(Chunk)} is generally better
+	 * Note that using {@link #canSaveChunk(LevelChunk)} is generally better
 	 * as it handles most of the radius logic.
 	 *
 	 * @return {@link #canCacheChunks}.
@@ -458,7 +458,7 @@ public class WDLPluginChannels {
 	/**
 	 * Is the given chunk part of a chunk override?
 	 */
-	public static boolean isChunkOverridden(Chunk chunk) {
+	public static boolean isChunkOverridden(LevelChunk chunk) {
 		if (chunk == null) {
 			return false;
 		}
@@ -604,7 +604,7 @@ public class WDLPluginChannels {
 			range.writeToOutput(output);
 		}
 
-		ClientPlayNetHandler nhpc = Minecraft.getInstance().getConnection();
+		ClientPacketListener nhpc = Minecraft.getInstance().getConnection();
 		final String channel;
 		if (isRegistered(nhpc, REQUEST_CHANNEL_NEW)) {
 			channel = REQUEST_CHANNEL_NEW;
@@ -613,8 +613,8 @@ public class WDLPluginChannels {
 		} else {
 			throw new RuntimeException("No request channel has been registered :("); // XXX
 		}
-		CCustomPayloadPacket requestPacket = VersionedFunctions.makePluginMessagePacket(channel, output.toByteArray());
-		nhpc.sendPacket(requestPacket);
+		ServerboundCustomPayloadPacket requestPacket = VersionedFunctions.makePluginMessagePacket(channel, output.toByteArray());
+		nhpc.send(requestPacket);
 	}
 
 	/**
@@ -627,7 +627,7 @@ public class WDLPluginChannels {
 	 *
 	 * XXX Equally unfortunately, the server never bothers to tell the client what channels it will send on...
 	 */
-	private static final Map<NetworkManager, Set<@ChannelName String>> REGISTERED_CHANNELS = new WeakHashMap<>();
+	private static final Map<Connection, Set<@ChannelName String>> REGISTERED_CHANNELS = new WeakHashMap<>();
 
 	/** Channels for the init packet */
 	private static final String INIT_CHANNEL_OLD = "WDL|INIT", INIT_CHANNEL_NEW = "wdl:init";
@@ -645,16 +645,16 @@ public class WDLPluginChannels {
 	/**
 	 * Gets the current set of registered channels for this server.
 	 */
-	private static Set<@ChannelName String> getRegisteredChannels(ClientPlayNetHandler nhpc) {
+	private static Set<@ChannelName String> getRegisteredChannels(ClientPacketListener nhpc) {
 		return REGISTERED_CHANNELS.computeIfAbsent(
-				nhpc.getNetworkManager(),
+				nhpc.getConnection(),
 				key -> new HashSet<>());
 	}
 
 	/**
 	 * Checks if the given channel is registered on this server.
 	 */
-	private static boolean isRegistered(ClientPlayNetHandler nhpc, String channelName) {
+	private static boolean isRegistered(ClientPacketListener nhpc, String channelName) {
 		return getRegisteredChannels(nhpc).contains(channelName);
 	}
 
@@ -669,7 +669,7 @@ public class WDLPluginChannels {
 	public static void sendInitPacket(String state) {
 		sendInitPacket(Minecraft.getInstance().getConnection(), state);
 	}
-	private static void sendInitPacket(ClientPlayNetHandler nhpc, String state) {
+	private static void sendInitPacket(ClientPacketListener nhpc, String state) {
 		assert nhpc != null : "Unexpected null nhpc: state=" + state + ", chans=" + REGISTERED_CHANNELS;
 
 		final String channel;
@@ -694,9 +694,9 @@ public class WDLPluginChannels {
 		object.addProperty("State", state);
 		byte[] bytes = object.toString().getBytes(StandardCharsets.UTF_8);
 
-		CCustomPayloadPacket initPacket = VersionedFunctions.makePluginMessagePacket(channel, bytes);
+		ServerboundCustomPayloadPacket initPacket = VersionedFunctions.makePluginMessagePacket(channel, bytes);
 
-		nhpc.sendPacket(initPacket);
+		nhpc.send(initPacket);
 
 		deferredInitState = null;
 	}
@@ -723,14 +723,14 @@ public class WDLPluginChannels {
 		// Register the WDL messages.
 		byte[] registerBytes = String.join("\0", WDL_CHANNELS).getBytes();
 
-		CCustomPayloadPacket registerPacket = VersionedFunctions.makePluginMessagePacket(VersionedFunctions.getRegisterChannel(), registerBytes);
-		minecraft.getConnection().sendPacket(registerPacket);
+		ServerboundCustomPayloadPacket registerPacket = VersionedFunctions.makePluginMessagePacket(VersionedFunctions.getRegisterChannel(), registerBytes);
+		minecraft.getConnection().send(registerPacket);
 
 		// Send the init message.
 		sendInitPacket("Init?");
 	}
 
-	static void onPluginChannelPacket(ClientPlayNetHandler sender, @ChannelName String channel, byte[] bytes) {
+	static void onPluginChannelPacket(ClientPacketListener sender, @ChannelName String channel, byte[] bytes) {
 		if ("REGISTER".equals(channel) || "minecraft:register".equals(channel)) {
 			registerChannels(sender, bytes);
 		} else if ("UNREGISTER".equals(channel) || "minecraft:unregister".equals(channel)) {
@@ -740,7 +740,7 @@ public class WDLPluginChannels {
 		}
 	}
 
-	private static void registerChannels(ClientPlayNetHandler nhpc, byte[] bytes) {
+	private static void registerChannels(ClientPacketListener nhpc, byte[] bytes) {
 		String existing = LOGGER.isDebugEnabled() ? REGISTERED_CHANNELS.toString() : null;
 
 		String str = new String(bytes, StandardCharsets.UTF_8);
@@ -760,7 +760,7 @@ public class WDLPluginChannels {
 		}
 	}
 
-	private static void unregisterChannels(ClientPlayNetHandler nhpc, byte[] bytes) {
+	private static void unregisterChannels(ClientPacketListener nhpc, byte[] bytes) {
 		String existing = LOGGER.isDebugEnabled() ? REGISTERED_CHANNELS.toString() : null;
 
 		String str = new String(bytes, StandardCharsets.UTF_8);

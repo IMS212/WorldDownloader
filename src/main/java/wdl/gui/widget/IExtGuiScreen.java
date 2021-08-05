@@ -13,8 +13,8 @@
  */
 package wdl.gui.widget;
 
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.EditBox;
 
 /**
  * Shared interface for a GuiScreen variant that can also store buttons and GuiLists.
@@ -25,7 +25,7 @@ public interface IExtGuiScreen {
 	 *
 	 * @param button The button to add.
 	 */
-	public abstract <T extends Widget> T addButton(T button);
+	public abstract <T extends AbstractWidget> T addButton(T button);
 
 	/**
 	 * Adds a list to the collection of lists to process.
@@ -39,7 +39,7 @@ public interface IExtGuiScreen {
 	 *
 	 * @param field The field to add.
 	 */
-	public abstract <T extends TextFieldWidget> T addTextField(T field);
+	public abstract <T extends EditBox> T addTextField(T field);
 
 	/**
 	 * Called on click when the mouse is over the button.

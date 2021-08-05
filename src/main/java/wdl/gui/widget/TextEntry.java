@@ -13,7 +13,7 @@
  */
 package wdl.gui.widget;
 
-import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Font;
 import wdl.gui.widget.GuiList.GuiListEntry;
 
 /**
@@ -23,19 +23,19 @@ public class TextEntry extends GuiListEntry<TextEntry> {
 	private final String text;
 	private final int color;
 	protected final WDLScreen screen;
-	protected final FontRenderer font;
+	protected final Font font;
 
 	/**
 	 * Creates a new TextEntry with the default color.
 	 */
-	public TextEntry(WDLScreen screen, FontRenderer font, String text) {
+	public TextEntry(WDLScreen screen, Font font, String text) {
 		this(screen, font, text, 0xFFFFFF);
 	}
 
 	/**
 	 * Creates a new TextEntry.
 	 */
-	public TextEntry(WDLScreen screen, FontRenderer font, String text, int color) {
+	public TextEntry(WDLScreen screen, Font font, String text, int color) {
 		this.screen = screen;
 		this.font = font;
 		this.text = text;

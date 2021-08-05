@@ -13,14 +13,14 @@
  */
 package wdl.handler.block;
 
-import net.minecraft.tileentity.TrappedChestTileEntity;
+import net.minecraft.world.level.block.entity.TrappedChestBlockEntity;
 
 /**
  * Handles trapped chests, in versions where they are separate from regular
  * chests (1.13+).
  */
-public class TrappedChestHandler extends BaseChestHandler<TrappedChestTileEntity> {
+public class TrappedChestHandler extends BaseChestHandler<TrappedChestBlockEntity> {
 	public TrappedChestHandler() {
-		super(TrappedChestTileEntity.class, "container.chest", "container.chestDouble");
+		super(TrappedChestBlockEntity.class, "container.chest", "container.chestDouble");
 	}
 }

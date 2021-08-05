@@ -13,9 +13,9 @@
  */
 package wdl.api;
 
-import net.minecraft.block.Block;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
 
 public interface IBlockEventListener extends IWDLMod {
 	/**
@@ -33,6 +33,6 @@ public interface IBlockEventListener extends IWDLMod {
 	 * @param data2
 	 *            Data2 of the event.
 	 */
-	public abstract void onBlockEvent(ClientWorld world, BlockPos pos,
+	public abstract void onBlockEvent(ClientLevel world, BlockPos pos,
 			Block block, int data1, int data2);
 }

@@ -16,28 +16,27 @@ package wdl.handler.block;
 import static wdl.versioned.VersionedFunctions.*;
 
 import java.util.function.BiConsumer;
-
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.BrewingStandContainer;
-import net.minecraft.tileentity.BrewingStandTileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.BrewingStandMenu;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import wdl.ReflectionUtils;
 import wdl.handler.HandlerException;
 
-public class BrewingStandHandler extends BlockHandler<BrewingStandTileEntity, BrewingStandContainer> {
+public class BrewingStandHandler extends BlockHandler<BrewingStandBlockEntity, BrewingStandMenu> {
 	public BrewingStandHandler() {
-		super(BrewingStandTileEntity.class, BrewingStandContainer.class, "container.brewing");
+		super(BrewingStandBlockEntity.class, BrewingStandMenu.class, "container.brewing");
 	}
 
 	@Override
-	public ITextComponent handle(BlockPos clickedPos, BrewingStandContainer container,
-			BrewingStandTileEntity blockEntity, IBlockReader world,
-			BiConsumer<BlockPos, BrewingStandTileEntity> saveMethod) throws HandlerException {
-		IInventory brewingInventory = ReflectionUtils.findAndGetPrivateField(
-				container, IInventory.class);
+	public Component handle(BlockPos clickedPos, BrewingStandMenu container,
+			BrewingStandBlockEntity blockEntity, BlockGetter world,
+			BiConsumer<BlockPos, BrewingStandBlockEntity> saveMethod) throws HandlerException {
+		Container brewingInventory = ReflectionUtils.findAndGetPrivateField(
+				container, Container.class);
 		String title = getCustomDisplayName(brewingInventory);
 		saveContainerItems(container, blockEntity, 0);
 		saveInventoryFields(container, blockEntity);
@@ -45,6 +44,6 @@ public class BrewingStandHandler extends BlockHandler<BrewingStandTileEntity, Br
 			blockEntity.setCustomName(customName(title));
 		}
 		saveMethod.accept(clickedPos, blockEntity);
-		return new TranslationTextComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.brewingStand");
+		return new TranslatableComponent("wdl.messages.onGuiClosedInfo.savedTileEntity.brewingStand");
 	}
 }

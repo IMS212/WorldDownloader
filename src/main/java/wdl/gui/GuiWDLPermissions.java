@@ -14,10 +14,9 @@
 package wdl.gui;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import wdl.WDL;
 import wdl.WDLPluginChannels;
 import wdl.gui.widget.ButtonDisplayGui;
@@ -53,7 +52,7 @@ public class GuiWDLPermissions extends WDLScreen {
 	 * @param parent
 	 */
 	public GuiWDLPermissions(@Nullable Screen parent, WDL wdl) {
-		super(new StringTextComponent("Permission info")); // XXX Untranslated
+		super(new TextComponent("Permission info")); // XXX Untranslated
 		this.parent = parent;
 		this.wdl = wdl;
 	}
@@ -64,28 +63,28 @@ public class GuiWDLPermissions extends WDLScreen {
 				200, 20, this.parent));
 
 		this.addButton(new WDLButton(this.width / 2 - 155, 39, 100, 20,
-				new TranslationTextComponent("wdl.gui.permissions.current")) {
+				new TranslatableComponent("wdl.gui.permissions.current")) {
 			public @Override void performAction() {
 				// Would open this GUI; do nothing.
 			};
 		});
 		if (WDLPluginChannels.canRequestPermissions()) {
 			this.addButton(new ButtonDisplayGui(this.width / 2 - 50, 39, 100, 20,
-					new TranslationTextComponent("wdl.gui.permissions.request"),
+					new TranslatableComponent("wdl.gui.permissions.request"),
 					() -> new GuiWDLPermissionRequest(this.parent, this.wdl)));
 			this.addButton(new ButtonDisplayGui(this.width / 2 + 55, 39, 100, 20,
-					new TranslationTextComponent("wdl.gui.permissions.overrides"),
+					new TranslatableComponent("wdl.gui.permissions.overrides"),
 					() -> new GuiWDLChunkOverrides(this.parent, this.wdl)));
 		}
 
 		this.addButton(new WDLButton((this.width / 2) + 5, 18, 150, 20,
-				new StringTextComponent("Reload permissions")) {
+				new TextComponent("Reload permissions")) {
 			public @Override void performAction() {
 				// Send the init packet.
 				WDLPluginChannels.sendInitPacket("Refresh?");
 
 				setEnabled(false);
-				setMessage(new StringTextComponent("Refreshing..."));
+				setMessage(new TextComponent("Refreshing..."));
 
 				refreshTicks = 50; // 2.5 seconds
 			}
@@ -146,7 +145,7 @@ public class GuiWDLPermissions extends WDLScreen {
 	}
 
 	@Override
-	public void onClose() {
+	public void removed() {
 		wdl.saveProps();
 	}
 
@@ -158,7 +157,7 @@ public class GuiWDLPermissions extends WDLScreen {
 			this.drawCenteredString(this.font,
 					"No permissions received; defaulting to everything enabled.",
 					this.width / 2, (this.height - 32 - 23) / 2 + 23
-					- font.FONT_HEIGHT / 2, 0xFFFFFF);
+					- font.lineHeight / 2, 0xFFFFFF);
 		}
 	}
 }
