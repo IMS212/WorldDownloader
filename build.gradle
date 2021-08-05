@@ -1,5 +1,6 @@
 plugins {
-	id 'fabric-loom' version '0.2.5-SNAPSHOT'
+	id 'dev.architectury.loom' version '0.7.2-SNAPSHOT'
+	id 'com.github.johnrengelman.shadow' version '7.0.0'
 	id 'maven-publish'
 }
 
@@ -11,34 +12,31 @@ version = project.mod_version + '-mc' + project.minecraft_version
 group = project.maven_group
 
 minecraft {
-}
+	accessWidener =  file("src/main/resources/wdl.accesswidener")}
 
 dependencies {
 	//to change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	//mappings files('libs/yarn-1.14.4+build.12+mcp.jar')
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}"
-	modCompile "net.fabricmc:fabric-loader:${project.loader_version}"
+	mappings "de.oceanlabs.mcp:mcp_snapshot:20201028-1.16.3"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	modCompile "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.
-	
-	compile files('libs/mod-worlddownloader-baseedit-' + project.version + '-dev.jar')
+	implementation 'com.google.code.findbugs:jsr305:3.0.2'
+	//modApi files('libs/mod-worlddownloader-baseedit-' + project.version + '-dev.jar')
+	//compileOnly files('libs/mod-worlddownloader-baseedit-' + project.version + '-dev.jar')
+	//modImplementation files('libs/mod-worlddownloader-baseedit-' + project.version + '-dev.jar')
 }
 
 processResources {
 	inputs.property "version", project.version
 
-	from(sourceSets.main.resources.srcDirs) {
-		include "fabric.mod.json"
+	filesMatching("fabric.mod.json") {
 		expand "version": project.mod_version
-	}
-
-	from(sourceSets.main.resources.srcDirs) {
-		exclude "fabric.mod.json"
 	}
 }
 
@@ -56,7 +54,9 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 	classifier = "sources"
 	from sourceSets.main.allSource
 }
-
+loom {
+	mixinConfig "wdl.mixins.json"
+}
 jar {
 	from "LICENSE"
 }

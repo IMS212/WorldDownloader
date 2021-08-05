@@ -5,13 +5,13 @@
   "mixins": [
   ],
   "client": [
-    "MixinClientPlayNetworkHandler",
+    "MixinNetHandlerPlayClient",
     "MixinClientWorld",
     "MixinCrashReport",
-	"MixinGameMenuScreen"
+	"MixinGuiIngameMenu"
   ],
   "injectors": {
     "defaultRequire": 1
   },
-  "refmap": "fabricwdl-refmap.json"
+  "refmap": "mod-fabricwdl-refmap.json"
 }

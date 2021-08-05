@@ -13,6 +13,7 @@
     "sources": "https://github.com/Pokechu22/WorldDownloader"
   },
 
+  "accessWidener" : "wdl.accesswidener",
   "license": "MMPL-2.0.3",
   "icon": "assets/wdl/icon.png",
 
@@ -27,8 +28,7 @@
   ],
 
   "depends": {
-    "fabricloader": ">=0.4.0",
-    "fabric": "*"
+    "fabricloader": ">=0.4.0"
   },
   "suggests": {
     "flamingo": "*"

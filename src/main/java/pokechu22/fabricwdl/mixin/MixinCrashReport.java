@@ -15,8 +15,8 @@
 package pokechu22.fabricwdl.mixin;
 
 import java.io.PrintStream;
-import net.minecraft.util.crash.CrashReport;
-import net.minecraft.util.crash.CrashReportSection;
+
+import net.minecraft.crash.CrashReport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import wdl.WDLHooks;
@@ -27,19 +27,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value={CrashReport.class})
+@Mixin(CrashReport.class)
 public abstract class MixinCrashReport implements IBaseChangesApplied {
-  @Inject(method="fillSystemDetails", at=@At("RETURN"))
+  @Inject(method="populateEnvironment", at=@At("RETURN"))
   private void onCrashReportPopulateEnvironment(CallbackInfo ci) {
     try {
-      WDLHooks.onCrashReportPopulateEnvironment((CrashReport)(Object)this);
+      wdl.WDLHooks.onCrashReportPopulateEnvironment((CrashReport)(Object)this);
     } catch (Throwable t) {
       try {
         final Logger LOGGER = LogManager.getLogger();
         LOGGER.fatal("World Downloader: Failed to add crash info", t);
-        ((CrashReport)(Object)this).getSystemDetailsSection().add("World Downloader - Fatal error in crash handler (see log)", t);
-      }
-      catch (Throwable t2) {
+        ((CrashReport)(Object)this).getCategory().addDetail("World Downloader - Fatal error in crash handler (see log)", t);
+      } catch (Throwable t2) {
         System.err.println("WDL: Double failure adding info to crash report!");
         t.printStackTrace();
         t2.printStackTrace();

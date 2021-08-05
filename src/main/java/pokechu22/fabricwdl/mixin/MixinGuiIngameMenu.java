@@ -14,34 +14,25 @@
  */
 package pokechu22.fabricwdl.mixin;
 
-import java.util.Collection;
-import java.util.List;
-import net.minecraft.client.gui.screen.GameMenuScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
-import wdl.WDLHooks;
-import wdl.ducks.IBaseChangesApplied;
 
+import net.minecraft.client.gui.screen.IngameMenuScreen;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.text.ITextComponent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import wdl.ducks.IBaseChangesApplied;
 
-@Mixin(value={GameMenuScreen.class})
-public abstract class MixinGameMenuScreen extends Screen implements IBaseChangesApplied {
-  protected MixinGameMenuScreen(boolean bool) {
-    super((Text)null);
+@Mixin(IngameMenuScreen.class)
+public class MixinGuiIngameMenu extends Screen implements IBaseChangesApplied {
+
+  protected MixinGuiIngameMenu(ITextComponent iTextComponent) {
+    super(iTextComponent);
   }
 
-  @Inject(method="initWidgets", at=@At("RETURN"))
-  private void onInitWidgets(CallbackInfo ci) {
-    WDLHooks.injectWDLButtons((GameMenuScreen)(Object)this, this.buttons, this::addButton);
-  }
-
-  @Inject(method="method_19836", at=@At("HEAD"))
-  private void onActionPerformed(ButtonWidget button, CallbackInfo ci) {
-    WDLHooks.handleWDLButtonClick((GameMenuScreen)(Object)this, button);
+  @Inject(method="init", at=@At("RETURN"))
+  private void onInitGui(CallbackInfo ci) {
+    wdl.WDLHooks.injectWDLButtons((IngameMenuScreen)(Object)this, buttons, this::addButton);
   }
 }
-
